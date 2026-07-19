@@ -82,5 +82,63 @@ class SecurityTestCase(unittest.TestCase):
             Order.query.filter_by(id=order_id).delete()
             db.session.commit()
 
+    def test_5_billing_settle_csrf(self):
+        # 1. Enable CSRF explicitly for this test
+        app.config['WTF_CSRF_ENABLED'] = True
+        
+        with app.app_context():
+            # Setup a test order that is completed
+            branch = Branch.query.first()
+            order = Order(branch_id=branch.id, type='dine-in', status='completed', customer_name='SettleTest')
+            db.session.add(order)
+            db.session.commit()
+            order_id = order.id
+            
+        # 2. Login to get session and CSRF token
+        login_page = self.client.get('/admin/login').data.decode('utf-8')
+        import re
+        match = re.search(r'<input type="hidden" name="csrf_token" value="([^"]+)"/>', login_page)
+        if not match:
+            match = re.search(r'<meta name="csrf-token" content="([^"]+)">', login_page)
+        login_csrf = match.group(1) if match else ''
+
+        login_res = self.client.post('/admin/login', data={
+            'mobile': '7999620244',
+            'password': 'shivshakti@2000',
+            'csrf_token': login_csrf
+        }, follow_redirects=True, environ_base={'REMOTE_ADDR': '127.0.0.3'})
+        self.assertEqual(login_res.status_code, 200)
+        
+        # 3. Extract CSRF token from the admin page
+        admin_page = self.client.get('/admin/billing').data.decode('utf-8')
+        import re
+        match = re.search(r'<meta name="csrf-token" content="([^"]+)">', admin_page)
+        self.assertIsNotNone(match, "CSRF token meta tag missing in billing page")
+        csrf_token = match.group(1)
+        
+        # 4. Settle the bill via the API
+        settle_res = self.client.post('/api/settle_bill', json={
+            'order_ids': [order_id],
+            'discount': 0,
+            'payment_method': 'Cash'
+        }, headers={'X-CSRFToken': csrf_token})
+        
+        self.assertEqual(settle_res.status_code, 200)
+        data = settle_res.get_json()
+        self.assertTrue(data.get('success'))
+        
+        # 5. Verify the invoice was created in DB
+        with app.app_context():
+            from models import Invoice
+            invoice = Invoice.query.filter_by(order_id=order_id).first()
+            self.assertIsNotNone(invoice, "Invoice was not created in the database")
+            
+            # Cleanup
+            Invoice.query.filter_by(id=invoice.id).delete()
+            Order.query.filter_by(id=order_id).delete()
+            db.session.commit()
+            
+        app.config['WTF_CSRF_ENABLED'] = False # Re-disable for any subsequent tests if needed
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

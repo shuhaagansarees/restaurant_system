@@ -1,3 +1,5 @@
+import csv
+import os
 from app import app, db
 from models import Branch, Category, MenuItem, Table, User
 
@@ -11,8 +13,8 @@ def seed_data():
 
         # Create Branch
         branch = Branch(
-            name="Downtown Diner",
-            address="123 Main St, City Center",
+            name="Shiv Shakti Restaurant & Banquet",
+            address="Shop no. 8 & 9, Green Residency, Commercial Shopping Center, Opp. Madhav Crest, Surat",
             phone="9876543210"
         )
         db.session.add(branch)
@@ -39,48 +41,53 @@ def seed_data():
         cashier.set_password('cashier123')
         db.session.add(cashier)
 
-        # Create Categories
-        cat_starters = Category(name="Starters", sort_order=1)
-        cat_mains = Category(name="Main Course", sort_order=2)
-        cat_drinks = Category(name="Beverages", sort_order=3)
-        db.session.add_all([cat_starters, cat_mains, cat_drinks])
-        db.session.commit() # Commit to get category ids
-
-        # Create Menu Items
-        item1 = MenuItem(
-            category_id=cat_starters.id,
-            name="Paneer Tikka",
-            description="Grilled cottage cheese cubes marinated in spices.",
-            price=250.0
-        )
-        item2 = MenuItem(
-            category_id=cat_mains.id,
-            name="Butter Chicken",
-            description="Classic rich tomato and butter gravy.",
-            price=350.0
-        )
-        item3 = MenuItem(
-            category_id=cat_mains.id,
-            name="Garlic Naan",
-            description="Freshly baked flatbread with garlic.",
-            price=50.0
-        )
-        item4 = MenuItem(
-            category_id=cat_drinks.id,
-            name="Cold Coffee",
-            description="Refreshing blended iced coffee.",
-            price=120.0,
-            variant_name="Regular"
-        )
-        db.session.add_all([item1, item2, item3, item4])
-
         # Create Tables
-        table1 = Table(branch_id=branch.id, name="T-1", seats=4, status="vacant")
-        table2 = Table(branch_id=branch.id, name="T-2", seats=2, status="vacant")
-        table3 = Table(branch_id=branch.id, name="T-3", seats=6, status="vacant")
-        db.session.add_all([table1, table2, table3])
-
+        tables = []
+        for i in range(1, 13):
+            tables.append(Table(branch_id=branch.id, name=f"T-{i}", seats=4, status="vacant"))
+        db.session.add_all(tables)
         db.session.commit()
+
+        # Read CSV and create categories & menu items
+        csv_path = os.path.join(os.path.dirname(__file__), 'menu_data.csv')
+        
+        if os.path.exists(csv_path):
+            with open(csv_path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                
+                categories_map = {}
+                sort_counter = 1
+                
+                for row in reader:
+                    cat_name = row['csvcategory'].strip()
+                    
+                    if cat_name not in categories_map:
+                        new_cat = Category(name=cat_name, sort_order=sort_counter)
+                        db.session.add(new_cat)
+                        db.session.commit()
+                        categories_map[cat_name] = new_cat
+                        sort_counter += 1
+                        
+                    cat_obj = categories_map[cat_name]
+                    
+                    item_name = row['item_name'].strip()
+                    item_name_gu = row['item_name_gu'].strip()
+                    price = float(row['price'].strip()) if row['price'].strip() else 0.0
+                    
+                    # Create item
+                    item = MenuItem(
+                        category_id=cat_obj.id,
+                        name=item_name,
+                        name_gu=item_name_gu,
+                        price=price
+                    )
+                    db.session.add(item)
+                    
+            db.session.commit()
+            print("Menu data loaded from CSV!")
+        else:
+            print("WARNING: menu_data.csv not found, skipping menu items.")
+
         print("Data seeded successfully!")
         print("-" * 30)
         print("Test Login Credentials:")

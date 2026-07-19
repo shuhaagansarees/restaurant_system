@@ -7,14 +7,8 @@ Features include a customer ordering PWA, admin real-time Live Orders Kanban, KD
 
 This application is configured to run smoothly on Render's Web Service free tier.
 
-**Build Command:**
-Configure the web service on Render to use this Build Command to install dependencies and seed the initial admin user:
-```bash
-pip install -r requirements.txt && python seed.py
-```
-
 **Start Command:**
-Configure the web service on Render to use this exact Start Command:
+Configure the web service on Render to use this exact start command:
 ```bash
 gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 app:app
 ```

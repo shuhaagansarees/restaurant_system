@@ -51,6 +51,15 @@ def load_user(user_id):
 # Create tables before first request if they don't exist
 with app.app_context():
     db.create_all()
+    # Auto-seed logic for fresh deployments
+    if User.query.count() == 0:
+        print("Empty database detected. Running auto-seed...")
+        try:
+            import seed
+            seed.seed_data()
+            print("Auto-seed successful!")
+        except Exception as e:
+            print(f"Auto-seed failed: {e}")
 
 def log_activity(action, details):
     uid = current_user.id if current_user.is_authenticated else None

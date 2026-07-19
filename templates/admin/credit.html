@@ -1,0 +1,93 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Credit / Udhar - Admin Panel{% endblock %}
+{% block page_title %}Credit / Udhar Ledger{% endblock %}
+
+{% block content %}
+<style>
+    .stats-row { display: flex; gap: 20px; margin-bottom: 24px; }
+    .stat-card { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; display: flex; align-items: center; justify-content: space-between; }
+    .stat-card h3 { margin: 0; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card .val { font-size: 2rem; font-weight: bold; color: var(--text-primary); }
+    .stat-card.orange .val { color: var(--brand-orange); }
+    
+    .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+    .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+    .data-table tr:last-child td { border-bottom: none; }
+</style>
+
+<div class="stats-row">
+    <div class="stat-card orange">
+        <div>
+            <h3>Total Outstanding</h3>
+            <div class="val">₹{{ total }}</div>
+        </div>
+        <div style="font-size: 3rem; opacity: 0.2;">💰</div>
+    </div>
+    <div class="stat-card">
+        <div>
+            <h3>Customers Who Owe</h3>
+            <div class="val">{{ count }}</div>
+        </div>
+        <div style="font-size: 3rem; opacity: 0.2;">👥</div>
+    </div>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Mobile</th>
+            <th>Invoice Ref</th>
+            <th>Amount Due</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ledger in ledgers %}
+        <tr>
+            <td style="font-weight: 600;">{{ ledger.customer_name }}</td>
+            <td>{{ ledger.customer_mobile }}</td>
+            <td><a href="/admin/invoices/print/{{ ledger.invoice_id }}" target="_blank">{{ ledger.invoice.invoice_number }}</a></td>
+            <td style="color: #ef4444; font-weight: bold;">₹{{ ledger.amount }}</td>
+            <td>
+                <button class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="markPaid({{ ledger.id }}, {{ ledger.amount }}, '{{ ledger.customer_name }}')">Record Payment</button>
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not ledgers %}
+        <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 30px;">No outstanding credits.</td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function markPaid(id, amount, name) {
+        if (!confirm(`Are you sure you want to record a payment of ₹${amount} from ${name}?`)) return;
+        
+        try {
+            const resp = await fetch('/api/pay_credit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ledger_id: id })
+            });
+            
+            const data = await resp.json();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert("Failed to record payment.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error.");
+        }
+    }
+</script>
+{% endblock %}

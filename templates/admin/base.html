@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <!-- Socket.io -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        function toggleDropdown(id) {
+            document.getElementById(id).classList.toggle('active');
+        }
+        window.onclick = function(event) {
+            if (!event.target.matches('.profile-circle')) {
+                var dropdowns = document.getElementsByClassName("dropdown");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('active')) {
+                        openDropdown.classList.remove('active');
+                    }
+                }
+            }
+        }
+    </script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="dot"></div>
+            <h2>ADMIN PANEL</h2>
+        </div>
+        <div class="sidebar-content">
+            <div class="nav-section">
+                <div class="nav-section-title">Overview</div>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
+            </div>
+            
+            {% if current_user.role in ['admin', 'manager', 'waiter'] %}
+            <div class="nav-section">OPERATIONS</div>
+            <a href="/admin/live_orders" class="nav-link {% if active_page == 'live_orders' %}active{% endif %}">Live Orders</a>
+            <a href="/admin/new_parcel" class="nav-link {% if active_page == 'new_parcel' %}active{% endif %}">New Parcel Order</a>
+            <a href="/admin/live_tables" class="nav-link {% if active_page == 'live_tables' %}active{% endif %}">Live Tables</a>
+            {% endif %}
+            
+            {% if current_user.role in ['admin', 'manager'] %}
+            <a href="/admin/tables" class="nav-link {% if active_page == 'tables' %}active{% endif %}">Tables Management</a>
+            {% endif %}
+            
+            {% if current_user.role in ['admin', 'manager', 'cashier'] %}
+            <div class="nav-section">FINANCIALS</div>
+            <a href="/admin/billing" class="nav-link {% if active_page == 'billing' %}active{% endif %}">Billing</a>
+            <a href="/admin/invoices" class="nav-link {% if active_page == 'invoices' %}active{% endif %}">Invoices</a>
+            <a href="/admin/credit" class="nav-link {% if active_page == 'credit' %}active{% endif %}">Credit / Udhar</a>
+            <a href="/admin/refunds" class="nav-link {% if active_page == 'refunds' %}active{% endif %}">Refunds</a>
+            {% endif %}
+            
+            {% if current_user.role in ['admin', 'manager'] %}
+            <div class="nav-section">MENU</div>
+            <a href="/admin/categories" class="nav-link {% if active_page == 'categories' %}active{% endif %}">Categories</a>
+            <a href="/admin/items" class="nav-link {% if active_page == 'items' %}active{% endif %}">Items</a>
+            
+            <div class="nav-section">INSIGHTS</div>
+            <a href="/admin/reports" class="nav-link {% if active_page == 'reports' %}active{% endif %}">Reports</a>
+            {% endif %}
+            
+            {% if current_user.role == 'admin' %}
+            <div class="nav-section">SYSTEM</div>
+            <a href="/admin/staff" class="nav-link {% if active_page == 'staff' %}active{% endif %}">Staff Management</a>
+            <a href="/admin/activity_log" class="nav-link {% if active_page == 'activity_log' %}active{% endif %}">Activity Log</a>
+            {% endif %}
+            
+            {% if current_user.role in ['admin', 'manager', 'chef'] %}
+            <div class="nav-section">KITCHEN</div>
+            <a href="/kitchen" class="nav-link" target="_blank">Open KDS ↗</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-area">
+        <div class="topbar">
+            <div class="topbar-left">
+                {% block page_title %}Dashboard{% endblock %}
+            </div>
+            <div class="topbar-right">
+                <div class="notification-bell">🔔</div>
+                <div class="profile-menu">
+                    <div class="profile-circle" onclick="toggleDropdown('profileDropdown')">
+                        {{ current_user.mobile[0] if current_user.is_authenticated else '?' }}
+                    </div>
+                    <div class="dropdown" id="profileDropdown">
+                        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-secondary);">
+                            Logged in as<br>
+                            <strong style="color:var(--text-primary);">{{ current_user.mobile if current_user.is_authenticated else '' }}</strong><br>
+                            {{ current_user.role|capitalize if current_user.is_authenticated else '' }}
+                        </div>
+                        <a href="#" class="dropdown-item">Change password</a>
+                        <a href="#" class="dropdown-item">Subscription</a>
+                        <a href="{{ url_for('admin_logout') }}" class="dropdown-item" style="color: #ef4444;">Sign out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            {% if dummy %}
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary); background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
+                    <h2>Coming Soon</h2>
+                    <p style="margin-top: 10px;">This page will be implemented in a future phase.</p>
+                </div>
+            {% else %}
+                {% block content %}{% endblock %}
+            {% endif %}
+        </div>
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

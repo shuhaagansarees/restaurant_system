@@ -1,0 +1,119 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Tables Management - Admin Panel{% endblock %}
+{% block page_title %}Tables Management{% endblock %}
+
+{% block content %}
+<style>
+    .layout-row { display: flex; gap: 24px; align-items: flex-start; }
+    .col-main { flex: 1; }
+    .col-side { width: 300px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+    
+    .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+    .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+    .data-table tr:last-child td { border-bottom: none; }
+    
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
+    .badge.vacant { background: #d1fae5; color: #065f46; }
+    .badge.occupied { background: #fee2e2; color: #991b1b; }
+    .badge.cleaning { background: #fef3c7; color: #92400e; }
+    
+    .btn-sm { padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border-color); background: white; cursor: pointer; font-size: 0.85rem; }
+    .btn-sm:hover { background: #f1f5f9; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; }
+    
+    /* QR Modal */
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; }
+    .modal-content img { width: 250px; height: 250px; margin: 20px auto; border: 1px solid var(--border-color); border-radius: 8px; }
+</style>
+
+<div class="layout-row">
+    <div class="col-main">
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div style="color: #059669; background: #d1fae5; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Table Name</th>
+                    <th>Seats</th>
+                    <th>Status</th>
+                    <th>QR Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in tables %}
+                <tr>
+                    <td style="font-weight: 600;">{{ table.name }}</td>
+                    <td>{{ table.seats }}</td>
+                    <td><span class="badge {{ table.status }}">{{ table.status | capitalize }}</span></td>
+                    <td>
+                        <button class="btn-sm" onclick="showQR({{ table.id }}, '{{ table.name }}')">View QR</button>
+                    </td>
+                    <td>
+                        <button class="btn-sm" onclick="alert('Edit table logic coming soon')">Edit</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="col-side">
+        <h3 style="margin-bottom: 20px;">Add New Table</h3>
+        <form method="POST" action="{{ url_for('manage_tables') }}">
+            <div class="form-group">
+                <label>Table Name (e.g. T-10)</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Seating Capacity</label>
+                <input type="number" name="capacity" min="1" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Create Table</button>
+        </form>
+    </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal" id="qrModal">
+    <div class="modal-content">
+        <h2 id="qrTitle">Table QR</h2>
+        <p style="color: var(--text-secondary); margin-top: 5px;">Scan to open menu directly.</p>
+        <img id="qrImage" src="" alt="QR Code">
+        <div>
+            <button class="btn-primary" onclick="closeQR()">Close</button>
+            <button class="btn-sm" onclick="window.open(document.getElementById('qrImage').src, '_blank')">Print</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showQR(id, name) {
+        document.getElementById('qrTitle').innerText = name + ' QR Code';
+        // Cache bust the image URL just in case
+        document.getElementById('qrImage').src = '/admin/qr/' + id + '?t=' + new Date().getTime();
+        document.getElementById('qrModal').classList.add('active');
+    }
+    
+    function closeQR() {
+        document.getElementById('qrModal').classList.remove('active');
+    }
+</script>
+{% endblock %}

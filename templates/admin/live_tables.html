@@ -1,0 +1,195 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Live Tables - Admin Panel{% endblock %}
+{% block page_title %}Live Tables{% endblock %}
+
+{% block content %}
+<style>
+    .tables-top {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        align-items: center;
+    }
+    .table-stats {
+        display: flex;
+        gap: 16px;
+    }
+    .table-stat {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 12px 20px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 100px;
+    }
+    .table-stat-val { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+    .table-stat-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; }
+    
+    .table-search input {
+        padding: 10px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        width: 300px;
+    }
+    
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    .table-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+    }
+    .table-card.vacant { border-top: 4px solid #10b981; }
+    .table-card.occupied { border-top: 4px solid #ef4444; }
+    .table-card.cleaning { border-top: 4px solid #f59e0b; }
+    
+    .table-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+    .table-seats { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
+    
+    .table-actions select {
+        padding: 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .btn-qr {
+        background: transparent;
+        border: 1px solid var(--brand-orange);
+        color: var(--brand-orange);
+        padding: 6px;
+        border-radius: 4px;
+        width: 100%;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .btn-qr:hover {
+        background: var(--brand-orange);
+        color: white;
+    }
+</style>
+
+<div class="tables-top">
+    <div class="table-stats">
+        <div class="table-stat">
+            <span class="table-stat-val">{{ stats.total }}</span>
+            <span class="table-stat-label">Total</span>
+        </div>
+        <div class="table-stat" style="color: #10b981;">
+            <span class="table-stat-val" style="color: inherit;">{{ stats.vacant }}</span>
+            <span class="table-stat-label">Vacant</span>
+        </div>
+        <div class="table-stat" style="color: #ef4444;">
+            <span class="table-stat-val" style="color: inherit;">{{ stats.occupied }}</span>
+            <span class="table-stat-label">Occupied</span>
+        </div>
+        <div class="table-stat" style="color: #f59e0b;">
+            <span class="table-stat-val" style="color: inherit;">{{ stats.cleaning }}</span>
+            <span class="table-stat-label">Cleaning</span>
+        </div>
+    </div>
+    
+    <div class="table-search">
+        <input type="text" id="searchTable" placeholder="Search table name..." onkeyup="searchTables()">
+    </div>
+</div>
+
+<div class="tables-grid">
+    {% for table in tables %}
+    <div class="table-card {{ table.status }}" data-name="{{ table.name | lower }}">
+        <div class="table-name">{{ table.name }}</div>
+        <div class="table-seats">{{ table.seats }} Seats</div>
+        
+        {% if table.status == 'occupied' and table.session_start_time %}
+        <div class="table-timer" style="margin-bottom: 15px; font-weight: 600; color: #ef4444;" data-start="{{ table.session_start_time.isoformat() }}Z">
+            <span class="timer-display">00:00:00</span>
+        </div>
+        {% endif %}
+        
+        <div class="table-actions">
+            <select onchange="updateTableStatus({{ table.id }}, this.value)">
+                <option value="vacant" {% if table.status == 'vacant' %}selected{% endif %}>Vacant</option>
+                <option value="occupied" {% if table.status == 'occupied' %}selected{% endif %}>Occupied</option>
+                <option value="cleaning" {% if table.status == 'cleaning' %}selected{% endif %}>Needs Cleaning</option>
+            </select>
+            <button class="btn-qr" onclick="window.open('/menu?table={{ table.name }}', '_blank')">Simulate QR Scan</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function searchTables() {
+        const input = document.getElementById('searchTable').value.toLowerCase();
+        const cards = document.querySelectorAll('.table-card');
+        
+        cards.forEach(card => {
+            if (card.dataset.name.includes(input)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    // Timer Logic
+    function updateTimers() {
+        document.querySelectorAll('.table-timer').forEach(timerEl => {
+            const startIso = timerEl.getAttribute('data-start');
+            if (startIso) {
+                const startTime = new Date(startIso).getTime();
+                const now = new Date().getTime();
+                const diff = Math.max(0, now - startTime);
+                
+                const hrs = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                const formatted = 
+                    String(hrs).padStart(2, '0') + ':' +
+                    String(mins).padStart(2, '0') + ':' +
+                    String(secs).padStart(2, '0');
+                    
+                const display = timerEl.querySelector('.timer-display');
+                if (display) {
+                    display.innerText = formatted;
+                }
+            }
+        });
+    }
+    
+    // Run immediately then every second
+    updateTimers();
+    setInterval(updateTimers, 1000);
+    
+    async function updateTableStatus(tableId, newStatus) {
+        try {
+            const resp = await fetch('/api/update_table_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ table_id: tableId, status: newStatus })
+            });
+            if (resp.ok) {
+                window.location.reload(); // Reload to refresh stats & colors easily
+            } else {
+                alert("Failed to update status");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error updating status");
+        }
+    }
+</script>
+{% endblock %}

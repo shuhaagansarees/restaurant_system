@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Display Screen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { background-color: #0f172a; color: white; margin: 0; padding: 20px; font-family: 'Inter', sans-serif; display: block; }
+        .kds-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .kds-header h1 { margin: 0; color: var(--brand-orange); }
+        .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .kds-card { background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 20px; cursor: pointer; transition: transform 0.2s; }
+        .kds-card:hover { transform: scale(1.02); border-color: var(--brand-orange); }
+        .kds-card.status-new { border-top: 6px solid #3b82f6; }
+        .kds-card.status-preparing { border-top: 6px solid #f59e0b; }
+        .kds-card-header { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-bottom: 12px; }
+        .kds-card-table { color: #94a3b8; font-size: 1rem; margin-bottom: 16px; }
+        .kds-item { font-size: 1.1rem; padding: 8px 0; border-bottom: 1px solid #334155; }
+        .kds-item:last-child { border-bottom: none; }
+        .empty-state { text-align: center; color: #94a3b8; font-size: 1.2rem; margin-top: 50px; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+    <div class="kds-header">
+        <h1>Kitchen Display (KDS)</h1>
+        <div>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" id="sound-toggle" checked>
+                <span>🔔 Sound</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="kds-grid" id="kds-grid">
+        {% if not orders %}
+            <div class="empty-state" id="empty-state">No active orders</div>
+        {% endif %}
+        
+        {% for order in orders %}
+            <div class="kds-card status-{{ order.status }}" data-id="{{ order.id }}" onclick="markServed({{ order.id }})">
+                <div class="kds-card-header">
+                    <span>#{{ order.id }}</span>
+                    <span>{{ order.created_at.strftime('%I:%M %p') }}</span>
+                </div>
+                <div class="kds-card-table">
+                    {% if order.table %}Table {{ order.table.name }}{% else %}Parcel{% endif %}
+                </div>
+                <div>
+                    {% for item in order.items %}
+                        <div class="kds-item">{{ item.quantity }}x {{ item.menu_item.name }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <script>
+        const socket = io();
+        
+        socket.on('new_order', () => {
+            if (document.getElementById('sound-toggle').checked) {
+                document.getElementById('notif-sound').play().catch(e => console.log(e));
+            }
+            // Simple approach for KDS: just refresh to ensure clean state
+            window.location.reload();
+        });
+        
+        socket.on('order_status_update', (data) => {
+            // If an order is marked served or completed from admin, remove it from KDS
+            if (data.status !== 'new' && data.status !== 'preparing') {
+                const card = document.querySelector(`.kds-card[data-id="${data.order_id}"]`);
+                if (card) {
+                    card.remove();
+                    checkEmpty();
+                }
+            } else {
+                // If it was just updated to preparing, we can just reload to update the UI
+                window.location.reload();
+            }
+        });
+        
+        function checkEmpty() {
+            const grid = document.getElementById('kds-grid');
+            if (grid.querySelectorAll('.kds-card').length === 0) {
+                grid.innerHTML = '<div class="empty-state" id="empty-state">No active orders</div>';
+            }
+        }
+        
+        async function markServed(orderId) {
+            try {
+                const resp = await fetch('/api/update_order_status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: orderId, status: 'served' })
+                });
+                if (resp.ok) {
+                    // Card will be removed via websocket event or we can just remove it now
+                    const card = document.querySelector(`.kds-card[data-id="${orderId}"]`);
+                    if (card) {
+                        card.remove();
+                        checkEmpty();
+                    }
+                }
+            } catch (e) {
+                console.error("Error marking served", e);
+                alert("Failed to update status");
+            }
+        }
+    </script>
+</body>
+</html>

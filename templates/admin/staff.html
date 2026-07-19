@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Staff Management - Admin Panel{% endblock %}
+{% block page_title %}Staff Accounts{% endblock %}
+
+{% block content %}
+<style>
+    .layout-row { display: flex; gap: 24px; align-items: flex-start; }
+    .col-main { flex: 1; }
+    .col-side { width: 350px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); height: fit-content; }
+    
+    .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+    .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; }
+    
+    .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+    .role-admin { background: #fee2e2; color: #991b1b; }
+    .role-manager { background: #e0e7ff; color: #3730a3; }
+    .role-waiter { background: #fef3c7; color: #92400e; }
+    .role-chef { background: #ffedd5; color: #9a3412; }
+    .role-cashier { background: #dcfce3; color: #166534; }
+</style>
+
+<div class="layout-row">
+    <div class="col-main">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div style="padding: 12px; background: #e0f2fe; color: #0369a1; border-radius: 8px; margin-bottom: 20px;">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in staff %}
+                <tr>
+                    <td style="font-weight: 600;">{{ u.name }}</td>
+                    <td>{{ u.mobile }}</td>
+                    <td><span class="role-badge role-{{ u.role }}">{{ u.role }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="col-side">
+        <h3 style="margin-bottom: 20px;">Add Staff Member</h3>
+        <form method="POST" action="/admin/staff">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" required placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Mobile Number (Login ID)</label>
+                <input type="text" name="mobile" required placeholder="10-digit number">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required placeholder="Set temporary password">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select name="role" required>
+                    <option value="waiter">Waiter</option>
+                    <option value="chef">Chef</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%;">Create Staff Account</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

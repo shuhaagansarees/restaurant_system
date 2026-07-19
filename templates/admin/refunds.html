@@ -1,0 +1,126 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Refunds - Admin Panel{% endblock %}
+{% block page_title %}Refunds Management{% endblock %}
+
+{% block content %}
+<style>
+    .layout-row { display: flex; gap: 24px; align-items: flex-start; }
+    .col-main { flex: 1; }
+    .col-side { width: 350px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+    
+    .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
+    .stat-card { flex: 1; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); }
+    .stat-card h4 { margin: 0 0 10px 0; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+    .stat-card .val { font-size: 1.8rem; font-weight: bold; }
+    
+    .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+    .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; }
+    
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
+    .badge.pending { background: #fef3c7; color: #92400e; }
+    .badge.completed { background: #d1fae5; color: #065f46; }
+</style>
+
+<div class="layout-row">
+    <div class="col-main">
+        <div class="stats-row">
+            <div class="stat-card">
+                <h4>Pending Returns</h4>
+                <div class="val" style="color: #f59e0b;">₹{{ pending_total }}</div>
+            </div>
+            <div class="stat-card">
+                <h4>Refunded to Date</h4>
+                <div class="val" style="color: #10b981;">₹{{ refunded_total }}</div>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div style="padding: 12px; background: #e0f2fe; color: #0369a1; border-radius: 8px; margin-bottom: 20px;">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Invoice No.</th>
+                    <th>Reason</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in refunds %}
+                <tr>
+                    <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td style="font-weight: 600;">
+                        <a href="/admin/invoices/print/{{ r.invoice_id }}" target="_blank">{{ r.invoice.invoice_number }}</a>
+                    </td>
+                    <td>{{ r.reason }}</td>
+                    <td style="font-weight: bold;">₹{{ r.amount }}</td>
+                    <td><span class="badge {{ r.status }}">{{ r.status | capitalize }}</span></td>
+                </tr>
+                {% endfor %}
+                {% if not refunds %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-secondary);">No refunds recorded.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="col-side">
+        <h3 style="margin-bottom: 20px;">Record Refund</h3>
+        <form method="POST" action="/admin/refunds">
+            <div class="form-group">
+                <label>Invoice Number</label>
+                <input type="text" name="invoice_no" placeholder="MB-00001" required>
+            </div>
+            <div class="form-group">
+                <label>Refund Amount (₹)</label>
+                <input type="number" name="amount" min="1" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Reason</label>
+                <select name="reason">
+                    <option value="Customer Complaint">Customer Complaint</option>
+                    <option value="Item Unavailable">Item Unavailable</option>
+                    <option value="Billing Error">Billing Error</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Return Method</label>
+                <select name="returned_via">
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Card">Card</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="completed">Completed (Money Returned)</option>
+                    <option value="pending">Pending (To be returned)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Note (Optional)</label>
+                <textarea name="note" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Record Refund</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

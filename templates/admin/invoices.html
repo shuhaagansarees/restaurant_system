@@ -1,0 +1,126 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Invoices - Admin Panel{% endblock %}
+{% block page_title %}Invoices{% endblock %}
+
+{% block content %}
+<style>
+    .controls { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+    .filters { display: flex; gap: 10px; }
+    .btn-filter { padding: 6px 12px; border: 1px solid var(--border-color); background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    .btn-filter.active { background: var(--brand-orange); color: white; border-color: var(--brand-orange); }
+    
+    .search-box { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; width: 250px; }
+    
+    .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+    .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+    
+    .btn-sm { padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border-color); background: white; cursor: pointer; font-size: 0.85rem; text-decoration: none; color: inherit; display: inline-block; }
+    .btn-sm:hover { background: #f1f5f9; }
+</style>
+
+<div class="controls">
+    <div class="filters">
+        <button class="btn-filter active" onclick="filterData('all', this)">All</button>
+        <button class="btn-filter" onclick="filterData('today', this)">Today</button>
+        <button class="btn-filter" onclick="filterData('7days', this)">7 Days</button>
+        <button class="btn-filter" onclick="filterData('month', this)">This Month</button>
+    </div>
+    <div>
+        <input type="text" class="search-box" id="searchInvoices" placeholder="Search Invoice #..." onkeyup="searchTable()">
+        <button class="btn-primary" onclick="exportCSV()">Export CSV</button>
+    </div>
+</div>
+
+<table class="data-table" id="invoicesTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Invoice No.</th>
+            <th>Type</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inv in invoices %}
+        <tr class="inv-row" data-date="{{ inv.created_at.isoformat() }}">
+            <td>{{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td style="font-weight: 600; color: var(--brand-orange);">{{ inv.invoice_number }}</td>
+            <td>{{ inv.order.type|capitalize }}</td>
+            <td>{{ inv.order.customer_name or 'Walk-in' }}</td>
+            <td style="font-weight: 600;">₹{{ inv.total }}</td>
+            <td>{{ inv.payment_method }}</td>
+            <td>
+                <a href="/admin/invoices/print/{{ inv.id }}" class="btn-sm" target="_blank">Print View</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function searchTable() {
+        const input = document.getElementById('searchInvoices').value.toLowerCase();
+        document.querySelectorAll('.inv-row').forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    }
+    
+    function filterData(type, btn) {
+        document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const now = new Date();
+        document.querySelectorAll('.inv-row').forEach(row => {
+            const rowDate = new Date(row.dataset.date);
+            let show = true;
+            
+            if (type === 'today') {
+                show = (rowDate.toDateString() === now.toDateString());
+            } else if (type === '7days') {
+                const diffTime = Math.abs(now - rowDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                show = diffDays <= 7;
+            } else if (type === 'month') {
+                show = (rowDate.getMonth() === now.getMonth() && rowDate.getFullYear() === now.getFullYear());
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+        
+        // Re-apply search if exists
+        searchTable();
+    }
+    
+    function exportCSV() {
+        let csv = [];
+        const rows = document.querySelectorAll("table tr");
+        
+        for (let i = 0; i < rows.length; i++) {
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            if (rows[i].style.display !== 'none') {
+                for (let j = 0; j < cols.length - 1; j++) { // Skip actions column
+                    row.push('"' + cols[j].innerText + '"');
+                }
+                csv.push(row.join(","));
+            }
+        }
+        
+        const csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+        const downloadLink = document.createElement("a");
+        downloadLink.download = "invoices.csv";
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+</script>
+{% endblock %}

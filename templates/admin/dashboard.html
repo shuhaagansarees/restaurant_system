@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard - Admin Panel{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-title">Today's Sales</div>
+        <div class="stat-value">₹{{ stats.today_sales }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Today's Orders</div>
+        <div class="stat-value">{{ stats.today_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Live Orders</div>
+        <div class="stat-value" style="color: var(--brand-orange);">{{ stats.live_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Best Seller Today</div>
+        <div class="stat-value" style="font-size: 1.2rem; line-height: 1.5; align-content: center;">{{ stats.best_seller }}</div>
+    </div>
+</div>
+{% endblock %}

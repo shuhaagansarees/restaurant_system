@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Invoice - {{ invoice.invoice_number }}</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 20px; background: #e2e8f0; display: flex; flex-direction: column; align-items: center; }
+        
+        .print-controls { margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-print { background: #f97316; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .format-toggle select { padding: 8px; border-radius: 4px; }
+        
+        /* Default Thermal 80mm style */
+        .invoice-paper { background: white; padding: 20px; color: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .thermal-80 { width: 302px; font-size: 12px; } /* ~80mm */
+        .thermal-58 { width: 219px; font-size: 10px; } /* ~58mm */
+        .a4-desktop { width: 700px; font-size: 14px; font-family: 'Arial', sans-serif; }
+        
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+        .mb-2 { margin-bottom: 10px; }
+        
+        .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
+        .divider-solid { border-bottom: 1px solid #000; margin: 10px 0; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; vertical-align: top; }
+        .money { text-align: right; }
+        
+        @media print {
+            body { background: white; padding: 0; align-items: flex-start; }
+            .print-controls { display: none; }
+            .invoice-paper { box-shadow: none; padding: 0; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-controls">
+        <div class="format-toggle">
+            <label>Format: </label>
+            <select id="formatSelect" onchange="changeFormat()">
+                <option value="thermal-80">Thermal 80mm</option>
+                <option value="thermal-58">Thermal 58mm</option>
+                <option value="a4-desktop">A4 Desktop</option>
+            </select>
+        </div>
+        <button class="btn-print" onclick="window.print()">🖨️ Print Invoice</button>
+    </div>
+
+    <div class="invoice-paper thermal-80" id="invoicePaper">
+        <div class="text-center bold mb-2" style="font-size: 1.4em;">RestaurantOrdering</div>
+        <div class="text-center mb-2">
+            123 Main Street, City<br>
+            Phone: +91 9999999999<br>
+            GSTIN: 27AAAAA0000A1Z5
+        </div>
+        
+        <div class="text-center bold" style="margin: 15px 0;">TAX INVOICE</div>
+        
+        <table style="margin-bottom: 10px;">
+            <tr><td>Inv No:</td><td class="text-right">{{ invoice.invoice_number }}</td></tr>
+            <tr><td>Date:</td><td class="text-right">{{ invoice.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+            <tr><td>Type:</td><td class="text-right">{{ invoice.order.type|capitalize }}</td></tr>
+            {% if invoice.order.table %}
+            <tr><td>Table:</td><td class="text-right">{{ invoice.order.table.name }}</td></tr>
+            {% endif %}
+            <tr><td>Customer:</td><td class="text-right">{{ invoice.order.customer_name or 'Walk-in' }}</td></tr>
+            <tr><td>Pay Mode:</td><td class="text-right">{{ invoice.payment_method }}</td></tr>
+        </table>
+        
+        <div class="divider"></div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Item</th>
+                    <th class="text-center">Qty</th>
+                    <th class="money">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Getting unique items by merging from the main order (and theoretically others if merged) -->
+                {% set items = {} %}
+                {% for item in invoice.order.items %}
+                    {% if item.menu_item.name in items %}
+                        {% set _ = items.update({item.menu_item.name: {'qty': items[item.menu_item.name].qty + item.quantity, 'tot': items[item.menu_item.name].tot + (item.quantity * item.price_at_order)}}) %}
+                    {% else %}
+                        {% set _ = items.update({item.menu_item.name: {'qty': item.quantity, 'tot': (item.quantity * item.price_at_order)}}) %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% for name, data in items.items() %}
+                <tr>
+                    <td>{{ name }}</td>
+                    <td class="text-center">{{ data.qty }}</td>
+                    <td class="money">{{ "%.2f"|format(data.tot) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="divider"></div>
+        
+        <table>
+            <tr>
+                <td>Subtotal</td>
+                <td class="money">{{ "%.2f"|format(invoice.subtotal) }}</td>
+            </tr>
+            {% if invoice.discount > 0 %}
+            <tr>
+                <td>Discount</td>
+                <td class="money">-{{ "%.2f"|format(invoice.discount) }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <!-- Formula: gst = (subtotal - discount) * 0.05 -->
+                <td>CGST (2.5%)</td>
+                <td class="money">{{ "%.2f"|format(invoice.gst_amount / 2) }}</td>
+            </tr>
+            <tr>
+                <td>SGST (2.5%)</td>
+                <td class="money">{{ "%.2f"|format(invoice.gst_amount / 2) }}</td>
+            </tr>
+            <tr>
+                <!-- Formula: round_off = rounded_total - exact_total -->
+                <td>Round Off</td>
+                <td class="money">{{ "%.2f"|format(invoice.round_off) }}</td>
+            </tr>
+        </table>
+        
+        <div class="divider-solid"></div>
+        
+        <table>
+            <tr class="bold" style="font-size: 1.2em;">
+                <td>GRAND TOTAL</td>
+                <td class="money">₹{{ invoice.total }}</td>
+            </tr>
+        </table>
+        
+        <div class="divider-solid"></div>
+        
+        <div class="text-center mt-3" style="margin-top: 20px;">
+            Thank you for dining with us!<br>
+            Please visit again.
+        </div>
+    </div>
+    
+    <script>
+        function changeFormat() {
+            const val = document.getElementById('formatSelect').value;
+            const paper = document.getElementById('invoicePaper');
+            paper.className = 'invoice-paper ' + val;
+        }
+        
+        // Auto trigger print on load in real scenario, but omitted here for testing
+    </script>
+</body>
+</html>

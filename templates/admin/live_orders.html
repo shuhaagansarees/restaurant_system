@@ -1,0 +1,219 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Live Orders - Admin Panel{% endblock %}
+{% block page_title %}Live Orders{% endblock %}
+
+{% block content %}
+<div class="filters-bar">
+    <div class="filters-left">
+        <select id="filter-type" onchange="applyFilters()">
+            <option value="all">All Types</option>
+            <option value="dine-in">Dine-in</option>
+            <option value="parcel">Parcel</option>
+        </select>
+        <select id="filter-branch" onchange="applyFilters()">
+            <option value="all">All Branches</option>
+            {% for branch in branches %}
+                <option value="{{ branch.id }}">{{ branch.name }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn-clear" onclick="clearFilters()">Clear</button>
+    </div>
+    <div class="filters-right">
+        <label class="sound-toggle">
+            <input type="checkbox" id="sound-toggle" checked>
+            <span>🔔 Sound on New Order</span>
+        </label>
+        <button class="btn-primary" onclick="alert('New Parcel - Coming in Phase 5')">New Parcel</button>
+    </div>
+</div>
+
+<div class="kanban-board">
+    <!-- NEW -->
+    <div class="kanban-column" id="col-new" ondrop="drop(event, 'new')" ondragover="allowDrop(event)">
+        <div class="column-header new-header">
+            <h3>New</h3>
+            <span class="count-badge" id="count-new">{{ orders_new|length }}</span>
+        </div>
+        <div class="column-body" id="list-new">
+            {% for order in orders_new %}
+                {% include 'admin/_order_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- PREPARING -->
+    <div class="kanban-column" id="col-preparing" ondrop="drop(event, 'preparing')" ondragover="allowDrop(event)">
+        <div class="column-header preparing-header">
+            <h3>Preparing</h3>
+            <span class="count-badge" id="count-preparing">{{ orders_preparing|length }}</span>
+        </div>
+        <div class="column-body" id="list-preparing">
+            {% for order in orders_preparing %}
+                {% include 'admin/_order_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- SERVED -->
+    <div class="kanban-column" id="col-served" ondrop="drop(event, 'served')" ondragover="allowDrop(event)">
+        <div class="column-header served-header">
+            <h3>Served</h3>
+            <span class="count-badge" id="count-served">{{ orders_served|length }}</span>
+        </div>
+        <div class="column-body" id="list-served">
+            {% for order in orders_served %}
+                {% include 'admin/_order_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- COMPLETED -->
+    <div class="kanban-column" id="col-completed" ondrop="drop(event, 'completed')" ondragover="allowDrop(event)">
+        <div class="column-header completed-header">
+            <h3>Completed (Today)</h3>
+            <span class="count-badge" id="count-completed">{{ orders_completed|length }}</span>
+        </div>
+        <div class="column-body" id="list-completed">
+            {% for order in orders_completed %}
+                {% include 'admin/_order_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Audio for notification -->
+<audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+    
+    // WebSockets logic
+    socket.on('new_order', async (data) => {
+        console.log("New order received:", data);
+        
+        // Play sound if toggle is on
+        const soundToggle = document.getElementById('sound-toggle');
+        if (soundToggle.checked) {
+            document.getElementById('notif-sound').play().catch(e => console.log('Audio play failed:', e));
+        }
+        
+        // Fetch the HTML for the new card
+        try {
+            const resp = await fetch(`/api/get_order_html/${data.order_id}`);
+            if (resp.ok) {
+                const html = await resp.text();
+                // Prepend to 'New' column
+                const listNew = document.getElementById('list-new');
+                listNew.insertAdjacentHTML('afterbegin', html);
+                updateCounts();
+            }
+        } catch (err) {
+            console.error("Failed to load new order HTML", err);
+        }
+    });
+
+    // Drag and Drop Logic
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text/plain", ev.target.dataset.id);
+        ev.target.classList.add('dragging');
+    }
+
+    document.addEventListener('dragend', (ev) => {
+        if(ev.target.classList) ev.target.classList.remove('dragging');
+    });
+
+    function drop(ev, newStatus) {
+        ev.preventDefault();
+        const orderId = ev.dataTransfer.getData("text/plain");
+        const draggedEl = document.querySelector(`.order-card[data-id="${orderId}"]`);
+        
+        // Find the closest column body
+        let dropTarget = ev.target.closest('.kanban-column').querySelector('.column-body');
+        
+        if (draggedEl && dropTarget && draggedEl.parentElement !== dropTarget) {
+            dropTarget.appendChild(draggedEl);
+            updateStatusAPI(orderId, newStatus);
+            updateCardButtons(draggedEl, newStatus);
+        }
+    }
+    
+    // Button Logic
+    function updateStatus(orderId, newStatus) {
+        const card = document.querySelector(`.order-card[data-id="${orderId}"]`);
+        const targetList = document.getElementById(`list-${newStatus}`);
+        if (card && targetList) {
+            targetList.appendChild(card);
+            updateStatusAPI(orderId, newStatus);
+            updateCardButtons(card, newStatus);
+        }
+    }
+    
+    function updateCardButtons(card, status) {
+        const actionDiv = card.querySelector('.order-actions');
+        if (status === 'new') {
+            actionDiv.innerHTML = `<button class="btn-status" onclick="updateStatus(${card.dataset.id}, 'preparing')">Start Preparing</button>`;
+        } else if (status === 'preparing') {
+            actionDiv.innerHTML = `<button class="btn-status" onclick="updateStatus(${card.dataset.id}, 'served')">Mark Served</button>`;
+        } else if (status === 'served') {
+            actionDiv.innerHTML = `<button class="btn-status" onclick="updateStatus(${card.dataset.id}, 'completed')">Complete</button>`;
+        } else {
+            actionDiv.innerHTML = '';
+        }
+        updateCounts();
+    }
+    
+    async function updateStatusAPI(orderId, status) {
+        try {
+            await fetch('/api/update_order_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order_id: orderId, status: status })
+            });
+        } catch (err) {
+            console.error("Failed to update status", err);
+            alert("Error updating order status!");
+        }
+    }
+    
+    function updateCounts() {
+        document.getElementById('count-new').innerText = document.querySelectorAll('#list-new .order-card').length;
+        document.getElementById('count-preparing').innerText = document.querySelectorAll('#list-preparing .order-card').length;
+        document.getElementById('count-served').innerText = document.querySelectorAll('#list-served .order-card').length;
+        document.getElementById('count-completed').innerText = document.querySelectorAll('#list-completed .order-card').length;
+    }
+    
+    // Filtering logic
+    function applyFilters() {
+        const typeFilter = document.getElementById('filter-type').value;
+        const branchFilter = document.getElementById('filter-branch').value;
+        
+        document.querySelectorAll('.order-card').forEach(card => {
+            const cardType = card.dataset.type;
+            const cardBranch = card.dataset.branch;
+            
+            let matchType = (typeFilter === 'all' || cardType === typeFilter);
+            let matchBranch = (branchFilter === 'all' || cardBranch === branchFilter);
+            
+            if (matchType && matchBranch) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        // We do not update counts on filter to show true counts, or we could if requested.
+    }
+    
+    function clearFilters() {
+        document.getElementById('filter-type').value = 'all';
+        document.getElementById('filter-branch').value = 'all';
+        applyFilters();
+    }
+</script>
+{% endblock %}

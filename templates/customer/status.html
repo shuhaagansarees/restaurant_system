@@ -1,0 +1,84 @@
+{% extends "customer/base.html" %}
+{% block title %}Order #{{ order.id }} - Status{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Order #{{ order.id }}</h1>
+    <p>{% if order.table_id %}Table {{ order.table.name }}{% else %}Parcel / Takeaway{% endif %}</p>
+</div>
+
+<div class="status-container">
+    <div id="status-circle" class="status-circle status-{{ order.status|lower }}">
+        <span id="status-icon">
+            {% if order.status|lower == 'new' %}
+                ⏳
+            {% elif order.status|lower == 'preparing' %}
+                🍳
+            {% elif order.status|lower == 'served' or order.status|lower == 'completed' %}
+                ✅
+            {% else %}
+                ℹ️
+            {% endif %}
+        </span>
+    </div>
+    
+    <div class="status-title" id="status-text">{{ order.status|upper }}</div>
+    <p style="color: var(--text-secondary);">
+        {% if order.status|lower == 'new' %}
+            Your order has been received by the kitchen.
+        {% elif order.status|lower == 'preparing' %}
+            Chef is preparing your food!
+        {% elif order.status|lower == 'served' %}
+            Your order is ready/served. Enjoy your meal!
+        {% elif order.status|lower == 'completed' %}
+            Order complete and billed.
+        {% endif %}
+    </p>
+
+    <div class="order-details">
+        <h4>Order Details</h4>
+        {% for item in order.items %}
+            <div class="order-list-item">
+                <span>{{ item.quantity }}x {{ item.menu_item.name }} {% if item.variant %}({{ item.variant }}){% endif %}</span>
+                <span>₹{{ item.price_at_order * item.quantity }}</span>
+            </div>
+        {% endfor %}
+        <hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
+        <div class="order-list-item" style="font-weight: bold;">
+            <span>Total</span>
+            <span>₹{{ total_amount }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+    const orderId = {{ order.id }};
+    
+    socket.on('connect', () => {
+        console.log('Connected to real-time updates');
+    });
+
+    socket.on('order_status_update', (data) => {
+        if (data.order_id === orderId) {
+            const status = data.status.toLowerCase();
+            const circle = document.getElementById('status-circle');
+            const text = document.getElementById('status-text');
+            const icon = document.getElementById('status-icon');
+            
+            // Remove all existing status classes
+            circle.className = `status-circle status-${status}`;
+            text.innerText = status.toUpperCase();
+            
+            if (status === 'new') icon.innerText = '⏳';
+            else if (status === 'preparing') icon.innerText = '🍳';
+            else if (status === 'served' || status === 'completed') icon.innerText = '✅';
+            
+            // Optionally reload page for full sync
+            // window.location.reload();
+        }
+    });
+</script>
+{% endblock %}

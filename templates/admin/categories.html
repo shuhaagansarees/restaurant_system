@@ -1,0 +1,118 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Categories - Admin Panel{% endblock %}
+{% block page_title %}Categories Management{% endblock %}
+
+{% block content %}
+<style>
+    .layout-row { display: flex; gap: 24px; align-items: flex-start; }
+    .col-main { flex: 1; }
+    .col-side { width: 350px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+    
+    .cat-list { list-style: none; padding: 0; margin: 0; }
+    .cat-item { background: var(--card-bg); border: 1px solid var(--border-color); margin-bottom: 10px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
+    .cat-item:active { cursor: grabbing; background: #f8fafc; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; }
+</style>
+
+<div class="layout-row">
+    <div class="col-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <p style="color: var(--text-secondary);">Drag and drop to reorder. This affects the customer menu.</p>
+            <button class="btn-primary" onclick="saveOrder()" id="btn-save-order" style="display: none;">Save New Order</button>
+        </div>
+        
+        <ul class="cat-list" id="sortable">
+            {% for cat in categories %}
+            <li class="cat-item" data-id="{{ cat.id }}" draggable="true">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600;">{{ cat.name }}</span>
+                    {% if cat.name_hi or cat.name_gu %}
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ cat.name_hi or '' }} | {{ cat.name_gu or '' }}</span>
+                    {% endif %}
+                </div>
+                <span style="color: var(--text-secondary); font-size: 0.8rem;">☰ Drag</span>
+            </li>
+            {% endfor %}
+            {% if not categories %}
+            <div style="text-align: center; color: var(--text-secondary); padding: 20px;">No categories yet.</div>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="col-side">
+        <h3 style="margin-bottom: 20px;">Add Category</h3>
+        <form method="POST" action="/admin/categories">
+            <div class="form-group">
+                <label>Category Name (English)</label>
+                <input type="text" name="name" required placeholder="e.g. Starters">
+            </div>
+            <div class="form-group">
+                <label>Hindi Name (Optional)</label>
+                <input type="text" name="name_hi" placeholder="e.g. स्टार्टर्स">
+            </div>
+            <div class="form-group">
+                <label>Gujarati Name (Optional)</label>
+                <input type="text" name="name_gu" placeholder="e.g. સ્ટાર્ટર્સ">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Create Category</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const list = document.getElementById('sortable');
+    let draggedItem = null;
+    let orderChanged = false;
+
+    list.addEventListener('dragstart', e => {
+        draggedItem = e.target;
+        e.dataTransfer.effectAllowed = 'move';
+    });
+
+    list.addEventListener('dragover', e => {
+        e.preventDefault();
+        const target = e.target.closest('li');
+        if (target && target !== draggedItem) {
+            const rect = target.getBoundingClientRect();
+            const next = (e.clientY - rect.top)/(rect.bottom - rect.top) > .5;
+            list.insertBefore(draggedItem, next && target.nextSibling || target);
+            orderChanged = true;
+            document.getElementById('btn-save-order').style.display = 'block';
+        }
+    });
+    
+    async function saveOrder() {
+        const btn = document.getElementById('btn-save-order');
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+        
+        const items = document.querySelectorAll('.cat-item');
+        const order = Array.from(items).map(item => parseInt(item.dataset.id));
+        
+        try {
+            const resp = await fetch('/api/reorder_categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order })
+            });
+            if (resp.ok) {
+                btn.style.display = 'none';
+                btn.disabled = false;
+                btn.innerText = 'Save New Order';
+                orderChanged = false;
+            }
+        } catch (e) {
+            alert('Error saving order');
+            btn.disabled = false;
+            btn.innerText = 'Save New Order';
+        }
+    }
+</script>
+{% endblock %}

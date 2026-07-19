@@ -1,0 +1,264 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Billing - Admin Panel{% endblock %}
+{% block page_title %}Billing & Checkout{% endblock %}
+
+{% block content %}
+<style>
+    .billing-layout { display: flex; gap: 30px; height: calc(100vh - 140px); }
+    .col-list { width: 350px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow-y: auto; }
+    .col-bill { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; }
+    
+    .list-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; position: sticky; top: 0; background: var(--card-bg); z-index: 2; }
+    
+    .bill-session { padding: 15px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
+    .bill-session:hover { background: #f8fafc; }
+    .bill-session.active { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .bill-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 5px; }
+    .bill-meta { font-size: 0.85rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
+    
+    .bill-content { padding: 30px; flex: 1; overflow-y: auto; }
+    .bill-empty { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 1.2rem; }
+    
+    .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .invoice-table th, .invoice-table td { padding: 12px 0; border-bottom: 1px solid var(--border-color); text-align: left; }
+    .invoice-table th { color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; }
+    .invoice-table td.money { text-align: right; }
+    .invoice-table th.money { text-align: right; }
+    
+    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.95rem; }
+    .summary-row.total { font-weight: bold; font-size: 1.4rem; border-top: 2px solid var(--border-color); padding-top: 15px; margin-top: 10px; }
+    
+    .billing-footer { padding: 20px 30px; border-top: 1px solid var(--border-color); background: #f8fafc; border-radius: 0 0 12px 12px; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; }
+    
+    .row { display: flex; gap: 15px; }
+    .col { flex: 1; }
+</style>
+
+<div class="billing-layout">
+    <!-- LEFT PANEL: TO BILL -->
+    <div class="col-list">
+        <div class="list-header">Pending Settlements</div>
+        
+        {% for s in sessions %}
+        <div class="bill-session" onclick="loadBill('table', {{ s.table.id }}, this)">
+            <div class="bill-title">Table {{ s.table.name }}</div>
+            <div class="bill-meta">
+                <span>{{ s.total_items }} items</span>
+                <span style="font-weight: 600; color: var(--brand-orange);">₹{{ s.total_amount }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% for p in parcels %}
+        <div class="bill-session" onclick="loadBill('order', {{ p.order.id }}, this)">
+            <div class="bill-title">Parcel #{{ p.order.id }}</div>
+            <div class="bill-meta">
+                <span>{{ p.order.customer_name or 'Walk-in' }}</span>
+                <span style="font-weight: 600; color: var(--brand-orange);">₹{{ p.total_amount }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if not sessions and not parcels %}
+            <div style="padding: 30px 20px; text-align: center; color: var(--text-secondary);">No pending bills</div>
+        {% endif %}
+    </div>
+    
+    <!-- RIGHT PANEL: BILLING DETAILS -->
+    <div class="col-bill">
+        <div id="bill-empty" class="bill-empty">
+            Select a session/order to view bill details
+        </div>
+        
+        <div id="bill-details" style="display: none; display: flex; flex-direction: column; height: 100%;">
+            <div class="bill-content">
+                <h2 style="margin-bottom: 20px;">Bill Breakdown</h2>
+                
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th class="money">Price</th>
+                            <th class="money">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bill-items-body">
+                        <!-- Filled via JS -->
+                    </tbody>
+                </table>
+                
+                <div style="width: 300px; margin-left: auto;">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="txt-subtotal">₹0.00</span>
+                    </div>
+                    <div class="summary-row" style="color: #ef4444;">
+                        <span>Discount</span>
+                        <span id="txt-discount">-₹0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST (5%)</span>
+                        <span id="txt-gst">₹0.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Grand Total</span>
+                        <span id="txt-total">₹0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="upi-container" style="display: none; text-align: center; margin: 20px 0;">
+                <p style="font-weight: 600; margin-bottom: 10px;">Scan to Pay via UPI</p>
+                <img id="upi-qr" src="" alt="UPI QR Code" style="width: 200px; height: 200px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px; background: white;">
+            </div>
+            
+            <div class="billing-footer">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Discount (Flat ₹)</label>
+                            <input type="number" id="input-discount" value="0" min="0" oninput="calculateTotals()">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <select id="input-payment" onchange="toggleUPI()">
+                                <option value="Cash">Cash</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Card">Card</option>
+                                <option value="Credit/Udhar">Credit/Udhar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col" style="display: flex; align-items: flex-end;">
+                        <button class="btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="settleBill()" id="btn-settle">Settle & Print</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentOrderIds = [];
+    let currentSubtotal = 0;
+    
+    async function loadBill(type, id, el) {
+        document.querySelectorAll('.bill-session').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        
+        document.getElementById('bill-empty').style.display = 'none';
+        document.getElementById('bill-details').style.display = 'flex';
+        
+        try {
+            const resp = await fetch(`/api/get_bill_details/${type}/${id}`);
+            const data = await resp.json();
+            
+            currentOrderIds = data.order_ids;
+            currentSubtotal = data.subtotal;
+            
+            let tbody = '';
+            data.items.forEach(item => {
+                tbody += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td class="money">₹${item.price}</td>
+                        <td class="money">₹${item.total}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('bill-items-body').innerHTML = tbody;
+            
+            document.getElementById('input-discount').value = 0;
+            calculateTotals();
+            
+        } catch (e) {
+            console.error(e);
+            alert("Error loading bill details");
+        }
+    }
+    
+    function calculateTotals() {
+        let discount = parseFloat(document.getElementById('input-discount').value) || 0;
+        if (discount > currentSubtotal) discount = currentSubtotal;
+        
+        let taxable = currentSubtotal - discount;
+        let gst = taxable * 0.05;
+        let total = taxable + gst;
+        let exactTotal = taxable + gst;
+        
+        document.getElementById('txt-subtotal').innerText = '₹' + currentSubtotal.toFixed(2);
+        document.getElementById('txt-discount').innerText = '-₹' + discount.toFixed(2);
+        document.getElementById('txt-gst').innerText = '₹' + gst.toFixed(2);
+        document.getElementById('txt-total').innerText = '₹' + Math.round(exactTotal);
+        
+        toggleUPI();
+    }
+    
+    function toggleUPI() {
+        const method = document.getElementById('input-payment').value;
+        const upiContainer = document.getElementById('upi-container');
+        if (method === 'UPI') {
+            const totalText = document.getElementById('txt-total').innerText.replace('₹', '');
+            const amount = parseFloat(totalText);
+            if (amount > 0) {
+                document.getElementById('upi-qr').src = '/api/generate_upi_qr?amount=' + amount;
+                upiContainer.style.display = 'block';
+            } else {
+                upiContainer.style.display = 'none';
+            }
+        } else {
+            upiContainer.style.display = 'none';
+        }
+    }
+    
+    async function settleBill() {
+        if (currentOrderIds.length === 0) return;
+        
+        const btn = document.getElementById('btn-settle');
+        btn.disabled = true;
+        btn.innerText = 'Settling...';
+        
+        let discount = parseFloat(document.getElementById('input-discount').value) || 0;
+        let payment = document.getElementById('input-payment').value;
+        
+        try {
+            const resp = await fetch('/api/settle_bill', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    order_ids: currentOrderIds,
+                    discount: discount,
+                    payment_method: payment
+                })
+            });
+            
+            const data = await resp.json();
+            if (data.success) {
+                // Redirect to invoice print page
+                window.location.href = `/admin/invoices/print/${data.invoice_id}`;
+            } else {
+                alert("Failed to settle: " + data.message);
+                btn.disabled = false;
+                btn.innerText = 'Settle & Print';
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error settling bill");
+            btn.disabled = false;
+            btn.innerText = 'Settle & Print';
+        }
+    }
+</script>
+{% endblock %}

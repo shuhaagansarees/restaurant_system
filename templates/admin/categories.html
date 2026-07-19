@@ -100,7 +100,7 @@
         try {
             const resp = await fetch('/api/reorder_categories', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
                 body: JSON.stringify({ order })
             });
             if (resp.ok) {

@@ -146,7 +146,7 @@
         try {
             await fetch('/api/toggle_item', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
                 body: JSON.stringify({ item_id: id, is_available: is_available })
             });
         } catch(e) {

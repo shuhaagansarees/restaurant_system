@@ -95,7 +95,7 @@
             try {
                 const resp = await fetch('/api/update_order_status', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
                     body: JSON.stringify({ order_id: orderId, status: 'served' })
                 });
                 if (resp.ok) {

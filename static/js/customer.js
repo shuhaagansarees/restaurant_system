@@ -126,7 +126,7 @@ async function placeOrder() {
     try {
         const response = await fetch('/api/place_order', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
             body: JSON.stringify(payload)
         });
         const data = await response.json();

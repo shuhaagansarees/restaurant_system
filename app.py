@@ -34,7 +34,9 @@ if not secret_key:
     secret_key = os.urandom(24)
 app.config['SECRET_KEY'] = secret_key
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database', 'restaurant.db')
+db_dir = os.path.join(basedir, 'database')
+os.makedirs(db_dir, exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_dir, 'restaurant.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions

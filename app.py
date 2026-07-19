@@ -284,12 +284,33 @@ def admin_logout():
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
-    # Placeholder values for now
+    # Timezone aware start of day (IST is UTC+5:30)
+    ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    ist_today_start = ist_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    utc_today_start = ist_today_start - timedelta(hours=5, minutes=30)
+    
+    today_invoices = Invoice.query.filter(Invoice.created_at >= utc_today_start).all()
+    today_sales = sum(i.total for i in today_invoices)
+    
+    today_orders = Order.query.filter(Order.created_at >= utc_today_start).count()
+    live_orders = Order.query.filter(Order.status.in_(['new', 'preparing', 'served'])).count()
+    
+    # Best seller logic
+    from sqlalchemy import func
+    best_seller = 'N/A'
+    best_item = db.session.query(
+        MenuItem.name,
+        func.sum(OrderItem.quantity).label('qty')
+    ).select_from(Order).join(OrderItem).join(MenuItem).filter(Order.created_at >= utc_today_start).group_by(MenuItem.id).order_by(func.sum(OrderItem.quantity).desc()).first()
+    
+    if best_item:
+        best_seller = best_item[0]
+
     stats = {
-        'today_sales': '0.00',
-        'today_orders': '0',
-        'live_orders': '0',
-        'best_seller': 'N/A'
+        'today_sales': f"{today_sales:.2f}",
+        'today_orders': str(today_orders),
+        'live_orders': str(live_orders),
+        'best_seller': best_seller
     }
     return render_template('admin/dashboard.html', stats=stats, active_page='dashboard')
 

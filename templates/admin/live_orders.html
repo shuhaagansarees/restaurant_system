@@ -90,6 +90,21 @@
 <script>
     const socket = io();
     
+    // Unlock audio on first user interaction to bypass browser autoplay policies
+    let audioUnlocked = false;
+    document.body.addEventListener('click', () => {
+        if (!audioUnlocked) {
+            const audio = document.getElementById('notif-sound');
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audioUnlocked = true;
+                }).catch(err => console.log('Audio unlock failed', err));
+            }
+        }
+    });
+
     // WebSockets logic
     socket.on('new_order', async (data) => {
         console.log("New order received:", data);

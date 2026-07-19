@@ -75,6 +75,7 @@
     <div class="col-side">
         <h3 style="margin-bottom: 20px;">Add New Table</h3>
         <form method="POST" action="{{ url_for('manage_tables') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label>Table Name (e.g. T-10)</label>
                 <input type="text" name="name" required>

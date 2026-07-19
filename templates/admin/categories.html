@@ -46,6 +46,7 @@
     <div class="col-side">
         <h3 style="margin-bottom: 20px;">Add Category</h3>
         <form method="POST" action="/admin/categories">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label>Category Name (English)</label>
                 <input type="text" name="name" required placeholder="e.g. Starters">

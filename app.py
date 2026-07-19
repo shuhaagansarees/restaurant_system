@@ -8,6 +8,9 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from dotenv import load_dotenv
 from functools import wraps
 from flask import abort, current_app
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 def role_required(*roles):
     def wrapper(fn):
@@ -39,7 +42,19 @@ os.makedirs(db_dir, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_dir, 'restaurant.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Security configs
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # Initialize extensions
+csrf = CSRFProtect(app)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 login_manager = LoginManager()
@@ -109,6 +124,17 @@ def send_whatsapp_message(mobile, text):
         print(f"[WhatsApp] Error sending to {mobile}: {str(e)}")
         return None
 
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
+
 # --- ROUTES ---
 
 @app.route('/')
@@ -127,9 +153,12 @@ def menu():
     if table_name:
         table = Table.query.filter_by(name=table_name).first()
         
-    return render_template('customer/menu.html', categories=categories, menu_items_by_cat=menu_items_by_cat, table=table, table_name=table_name)
+    tables = Table.query.filter_by(is_active=True).all()
+    return render_template('customer/menu.html', categories=categories, menu_items_by_cat=menu_items_by_cat, table=table, table_name=table_name, tables=tables)
 
 @app.route('/api/place_order', methods=['POST'])
+@csrf.exempt
+@limiter.limit("10 per minute")
 def place_order():
     data = request.json
     table_name = data.get('table_name')
@@ -169,11 +198,30 @@ def place_order():
     db.session.add(new_order)
     db.session.commit() # commit to get order id
 
+    validated_items = []
+    total_amount = 0
     for item in items:
+        qty = item.get('quantity', 0)
+        if not isinstance(qty, int) or qty <= 0:
+            return jsonify({'success': False, 'message': 'Invalid quantity'}), 400
+        
+        menu_item = MenuItem.query.get(item['id'])
+        if not menu_item:
+            return jsonify({'success': False, 'message': 'Invalid menu item'}), 400
+            
+        validated_items.append({
+            'id': menu_item.id,
+            'variant': item.get('variant'),
+            'quantity': qty,
+            'price': menu_item.price
+        })
+        total_amount += (menu_item.price * qty)
+
+    for item in validated_items:
         order_item = OrderItem(
             order_id=new_order.id,
             menu_item_id=item['id'],
-            variant=item.get('variant'),
+            variant=item['variant'],
             quantity=item['quantity'],
             price_at_order=item['price']
         )
@@ -181,7 +229,7 @@ def place_order():
     
     db.session.commit()
 
-    log_activity('order_placed', f"New {order_type} Order #{new_order.id} placed by {customer_name or 'Unknown'} for Rs.{sum(i['price']*i['quantity'] for i in items)}")
+    log_activity('order_placed', f"New {order_type} Order #{new_order.id} placed by {customer_name or 'Unknown'} for Rs.{total_amount}")
 
     if customer_mobile:
         send_whatsapp_message(customer_mobile, f"Hello {customer_name or ''}, your order #{new_order.id} has been confirmed. Thank you!")
@@ -204,6 +252,7 @@ def admin_index():
     return redirect(url_for('admin_login'))
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])
 def admin_login():
     if current_user.is_authenticated:
         return redirect(url_for('admin_dashboard'))

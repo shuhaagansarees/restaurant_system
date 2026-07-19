@@ -50,7 +50,7 @@
                             <span class="combo-badge">COMBO</span>
                         {% endif %}
                     </div>
-                    <div class="item-desc lang-text" data-en="{{ item.description or '' }}" data-hi="{{ item.desc_hi or item.description or '' }}" data-gu="{{ item.desc_gu or item.description or '' }}">{{ item.description }}</div>
+                    <div class="item-desc lang-text" data-en="{{ item.description or '' }}" data-hi="{{ item.desc_hi or item.description or '' }}" data-gu="{{ item.desc_gu or item.description or '' }}">{{ item.description or '' }}</div>
                     
                     {% if item.variant_name %}
                         <div class="variants">
@@ -96,9 +96,9 @@
                 <label>Table Selection (Optional for Dine-in)</label>
                 <select id="manual-table">
                     <option value="">Parcel / Takeaway</option>
-                    <option value="T-1">T-1</option>
-                    <option value="T-2">T-2</option>
-                    <option value="T-3">T-3</option>
+                    {% for t in tables %}
+                    <option value="{{ t.name }}">{{ t.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
         {% endif %}

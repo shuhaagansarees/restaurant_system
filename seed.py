@@ -21,8 +21,8 @@ def seed_data():
         db.session.commit() # Commit to get branch.id
 
         # Add admin user
-        admin = User(name='Admin User', mobile='9999999999', role='admin', branch_id=branch.id)
-        admin.set_password('admin123')
+        admin = User(name='Admin User', mobile='7999620244', role='admin', branch_id=branch.id)
+        admin.set_password('shivshakti@2000')
         db.session.add(admin)
         
         manager = User(name='Manager User', mobile='8888888888', role='manager', branch_id=branch.id)
@@ -91,8 +91,8 @@ def seed_data():
         print("Data seeded successfully!")
         print("-" * 30)
         print("Test Login Credentials:")
-        print("Mobile: 9999999999")
-        print("Password: admin123")
+        print("Mobile: 7999620244")
+        print("Password: shivshakti@2000")
         print("-" * 30)
 
 if __name__ == "__main__":

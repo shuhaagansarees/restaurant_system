@@ -82,6 +82,7 @@
     <div class="col-side">
         <h3 style="margin-bottom: 20px;">Record Refund</h3>
         <form method="POST" action="/admin/refunds">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label>Invoice Number</label>
                 <input type="text" name="invoice_no" placeholder="MB-00001" required>

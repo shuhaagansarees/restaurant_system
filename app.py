@@ -262,7 +262,7 @@ def edit_order(order_id):
     if order.status in ['completed', 'cancelled']:
         flash('Cannot edit a completed or cancelled order')
         return redirect(url_for('live_orders'))
-    categories = Category.query.order_by(Category.order).all()
+    categories = Category.query.order_by(Category.sort_order.asc()).all()
     return render_template('admin/edit_order.html', order=order, categories=categories, active_page='live_orders')
 
 @app.route('/api/update_order', methods=['POST'])

@@ -52,7 +52,7 @@
     
     {% if order.table and order.status not in ['completed', 'cancelled'] %}
     <div style="margin-top: 20px;">
-        <a href="{{ url_for('customer_menu', table=order.table.name) }}" class="btn-primary" style="display: block; text-align: center; text-decoration: none;">+ Order More Items</a>
+        <a href="{{ url_for('menu', table=order.table.name) }}" class="btn-primary" style="display: block; text-align: center; text-decoration: none;">+ Order More Items</a>
         <p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Items will be added to your existing bill.</p>
     </div>
     {% endif %}

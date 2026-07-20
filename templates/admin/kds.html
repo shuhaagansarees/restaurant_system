@@ -84,10 +84,26 @@
 
     socket.on('new_order', () => {
             if (document.getElementById('sound-toggle').checked) {
-                document.getElementById('notif-sound').play().catch(e => console.log(e));
+                const audio = document.getElementById('notif-sound');
+                let playCount = 0;
+                
+                function playBeep() {
+                    if (playCount < 3) {
+                        audio.play().catch(e => console.log(e));
+                    } else {
+                        window.location.reload();
+                    }
+                }
+                
+                audio.onended = () => {
+                    playCount++;
+                    setTimeout(playBeep, 500); // 0.5s gap
+                };
+                
+                playBeep(); // Start the first beep
+            } else {
+                window.location.reload();
             }
-            // Simple approach for KDS: just refresh to ensure clean state
-            window.location.reload();
         });
         
         socket.on('order_status_update', (data) => {

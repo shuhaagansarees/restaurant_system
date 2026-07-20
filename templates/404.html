@@ -1,0 +1,14 @@
+{% extends "customer/base.html" %}
+
+{% block title %}404 Not Found{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 20px;">
+    <h1 style="font-size: 3rem; color: var(--brand-orange); margin-bottom: 10px;">404</h1>
+    <h2>Order or Page Not Found</h2>
+    <p style="color: var(--text-secondary); margin-top: 15px; margin-bottom: 30px;">
+        The order ID or page you are looking for does not exist. It may have been removed or the ID is incorrect.
+    </p>
+    <a href="{{ url_for('menu') }}" class="btn-primary" style="text-decoration: none;">Go to Menu</a>
+</div>
+{% endblock %}

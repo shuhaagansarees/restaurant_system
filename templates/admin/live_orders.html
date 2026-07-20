@@ -112,7 +112,23 @@
         // Play sound if toggle is on
         const soundToggle = document.getElementById('sound-toggle');
         if (soundToggle.checked) {
-            document.getElementById('notif-sound').play().catch(e => console.log('Audio play failed:', e));
+            const audio = document.getElementById('notif-sound');
+            let playCount = 0;
+            
+            function playBeep() {
+                if (playCount < 3) {
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+            
+            audio.onended = () => {
+                playCount++;
+                if (playCount < 3) {
+                    setTimeout(playBeep, 500); // 0.5s gap
+                }
+            };
+            
+            playBeep(); // Start first beep
         }
         
         // Fetch the HTML for the new card

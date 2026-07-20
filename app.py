@@ -1,8 +1,12 @@
 import os
 import qrcode
-from io import BytesIO
+import io
+import csv
+import zipfile
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_socketio import SocketIO
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
@@ -150,12 +154,116 @@ def internal_error(error):
 def not_found_error(error):
     return render_template('404.html'), 404
 
+def export_model_to_csv(model):
+    si = io.StringIO()
+    cw = csv.writer(si)
+    columns = [column.name for column in model.__mapper__.columns]
+    cw.writerow(columns)
+    records = model.query.all()
+    for record in records:
+        cw.writerow([getattr(record, col) for col in columns])
+    return si.getvalue()
+
+def generate_backup_zip():
+    models_to_backup = [
+        ('orders.csv', Order),
+        ('order_items.csv', OrderItem),
+        ('invoices.csv', Invoice),
+        ('credit_ledger.csv', CreditLedger),
+        ('refunds.csv', Refund),
+        ('menu_items.csv', MenuItem),
+        ('categories.csv', Category),
+        ('tables.csv', Table)
+    ]
+    
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for filename, model in models_to_backup:
+            csv_data = export_model_to_csv(model)
+            zf.writestr(filename, csv_data)
+            
+    zip_buffer.seek(0)
+    return zip_buffer
+
+def send_backup_email(zip_buffer):
+    smtp_server = os.environ.get('SMTP_SERVER')
+    smtp_port = os.environ.get('SMTP_PORT')
+    smtp_username = os.environ.get('SMTP_USERNAME')
+    smtp_password = os.environ.get('SMTP_PASSWORD')
+    
+    if not all([smtp_server, smtp_port, smtp_username, smtp_password]):
+        print("SMTP credentials not configured. Skipping email backup.")
+        return False
+        
+    msg = EmailMessage()
+    msg['Subject'] = f"Shiv Shakti System Database Backup - {datetime.now().strftime('%Y-%m-%d')}"
+    msg['From'] = smtp_username
+    msg['To'] = 'shivshaktidindoli@gmail.com'
+    msg.set_content("Please find attached the daily database backup (CSV format).")
+    
+    msg.add_attachment(
+        zip_buffer.read(),
+        maintype='application',
+        subtype='zip',
+        filename=f"shivshakti_backup_{datetime.now().strftime('%Y%m%d')}.zip"
+    )
+    zip_buffer.seek(0)
+    
+    try:
+        if int(smtp_port) == 465:
+            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port))
+        else:
+            server = smtplib.SMTP(smtp_server, int(smtp_port))
+            server.starttls()
+            
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        print("Backup email sent successfully.")
+        return True
+    except Exception as e:
+        print(f"Failed to send backup email: {e}")
+        return False
+
 # --- ROUTES ---
 
 @app.route('/ping')
 @limiter.exempt
 def ping():
     return "OK", 200
+
+@app.route('/api/trigger_backup')
+@csrf.exempt
+@limiter.exempt
+def trigger_backup():
+    secret_key = os.environ.get('BACKUP_SECRET_KEY')
+    req_key = request.args.get('key')
+    
+    if not secret_key or req_key != secret_key:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+    try:
+        zip_buffer = generate_backup_zip()
+        email_sent = send_backup_email(zip_buffer)
+        return jsonify({'success': True, 'message': 'Backup generated', 'email_sent': email_sent})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/download_backup')
+@login_required
+@csrf.exempt
+def download_backup():
+    try:
+        zip_buffer = generate_backup_zip()
+        return send_file(
+            zip_buffer,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=f"shivshakti_backup_{datetime.now().strftime('%Y%m%d')}.zip"
+        )
+    except Exception as e:
+        flash(f"Failed to generate backup: {e}")
+        return redirect(url_for('admin_dashboard'))
 
 @app.route('/')
 def index():

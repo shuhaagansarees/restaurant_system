@@ -132,7 +132,11 @@ async function placeOrder() {
         const data = await response.json();
         
         if (data.success) {
-            window.location.href = `/order/${data.order_id}`;
+            const beep = new Audio('/static/audio/beep.wav');
+            beep.play().catch(e => console.log(e));
+            setTimeout(() => {
+                window.location.href = `/order/${data.order_id}`;
+            }, 250); // wait for beep to finish before redirecting
         } else {
             alert('Error: ' + data.message);
         }

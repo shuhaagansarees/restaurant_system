@@ -1,7 +1,12 @@
 <div class="order-card" data-id="{{ order.id }}" data-type="{{ order.type }}" data-branch="{{ order.branch_id }}" draggable="true" ondragstart="drag(event)">
-    <div class="order-card-header">
-        <span class="order-id">#{{ order.id }}</span>
-        <span class="order-time">{{ order.created_at.strftime('%I:%M %p') }}</span>
+    <div class="order-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <span class="order-id">#{{ order.id }}</span>
+            <span class="order-time">{{ order.created_at.strftime('%I:%M %p') }}</span>
+        </div>
+        {% if order.status not in ['completed', 'cancelled'] %}
+        <a href="{{ url_for('edit_order', order_id=order.id) }}" style="color: var(--brand-blue); text-decoration: none; font-size: 0.9rem; padding: 2px 6px; border: 1px solid var(--brand-blue); border-radius: 4px;" title="Edit Order">Edit</a>
+        {% endif %}
     </div>
     <div class="order-table">
         {% if order.table %}Table {{ order.table.name }}{% else %}Parcel{% endif %}

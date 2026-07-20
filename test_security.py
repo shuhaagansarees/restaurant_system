@@ -1,6 +1,8 @@
 import unittest
+import json
+import warnings
 from app import app, db
-from models import User, Order, Branch, Table
+from models import User, Order, Branch, Table, MenuItem, OrderItem
 
 class SecurityTestCase(unittest.TestCase):
     def setUp(self):
@@ -139,6 +141,79 @@ class SecurityTestCase(unittest.TestCase):
             db.session.commit()
             
         app.config['WTF_CSRF_ENABLED'] = False # Re-disable for any subsequent tests if needed
+
+    def test_6_order_editing(self):
+        # 1. Enable CSRF explicitly for this test
+        app.config['WTF_CSRF_ENABLED'] = True
+        
+        with app.app_context():
+            # Setup a test order that is 'preparing'
+            branch = Branch.query.first()
+            menu_item_1 = MenuItem.query.first()
+            order = Order(branch_id=branch.id, type='dine-in', status='preparing', customer_name='EditTest')
+            db.session.add(order)
+            db.session.flush()
+            
+            oi = OrderItem(order_id=order.id, menu_item_id=menu_item_1.id, quantity=1, price_at_order=100)
+            db.session.add(oi)
+            db.session.commit()
+            
+            order_id = order.id
+            item_1_id = menu_item_1.id
+            
+        # 2. Login to get session and CSRF token
+        login_page = self.client.get('/admin/login').data.decode('utf-8')
+        import re
+        match = re.search(r'<input type="hidden" name="csrf_token" value="([^"]+)"/>', login_page)
+        if not match:
+            match = re.search(r'<meta name="csrf-token" content="([^"]+)">', login_page)
+        login_csrf = match.group(1) if match else ''
+
+        login_res = self.client.post('/admin/login', data={
+            'mobile': '7999620244',
+            'password': 'shivshakti@2000',
+            'csrf_token': login_csrf
+        }, follow_redirects=True, environ_base={'REMOTE_ADDR': '127.0.0.3'})
+        self.assertEqual(login_res.status_code, 200)
+        
+        # 3. Extract CSRF token from the admin page
+        admin_page = self.client.get('/admin/live_orders').data.decode('utf-8')
+        match = re.search(r'<meta name="csrf-token" content="([^"]+)">', admin_page)
+        csrf_token = match.group(1)
+        
+        # 4. Edit the order (change qty, add new item)
+        with app.app_context():
+            menu_item_2 = MenuItem.query.filter(MenuItem.id != item_1_id).first()
+            item_2_id = menu_item_2.id
+            
+        edit_res = self.client.post('/api/update_order', json={
+            'order_id': order_id,
+            'items': [
+                {'id': item_1_id, 'quantity': 2, 'price': 100}, # Modified qty
+                {'id': item_2_id, 'quantity': 1, 'price': 200}  # New item
+            ]
+        }, headers={'X-CSRFToken': csrf_token})
+        
+        self.assertEqual(edit_res.status_code, 200)
+        
+        # 5. Verify the order changes in DB
+        with app.app_context():
+            order = Order.query.get(order_id)
+            self.assertTrue(order.has_new_items, "has_new_items flag was not set")
+            self.assertEqual(len(order.items), 2, "Order should have exactly 2 items now")
+            
+            # Check ActivityLog
+            from models import ActivityLog
+            log = ActivityLog.query.order_by(ActivityLog.created_at.desc()).first()
+            self.assertIn('Changed', log.details)
+            self.assertIn('Added', log.details)
+            
+            # Cleanup
+            OrderItem.query.filter_by(order_id=order_id).delete()
+            Order.query.filter_by(id=order_id).delete()
+            db.session.commit()
+            
+        app.config['WTF_CSRF_ENABLED'] = False
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

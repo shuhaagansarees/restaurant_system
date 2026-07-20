@@ -68,6 +68,17 @@ def load_user(user_id):
 # Create tables before first request if they don't exist
 with app.app_context():
     db.create_all()
+    
+    # Safe auto-migration for Phase 17 (has_new_items)
+    try:
+        from sqlalchemy import text
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN has_new_items BOOLEAN DEFAULT 0"))
+        db.session.commit()
+        print("Phase 17 migration successful: added has_new_items column.")
+    except Exception as e:
+        db.session.rollback()
+        # print("Phase 17 migration already applied or skipped.")
+        pass
     # Auto-seed logic for fresh deployments
     if User.query.count() == 0:
         print("Empty database detected. Running auto-seed...")
@@ -238,6 +249,82 @@ def place_order():
     socketio.emit('new_order', {'order_id': new_order.id}, namespace='/')
 
     return jsonify({'success': True, 'order_id': new_order.id})
+
+@app.route('/admin/edit_order/<int:order_id>')
+@login_required
+@role_required('admin', 'manager', 'waiter')
+def edit_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.status in ['completed', 'cancelled']:
+        flash('Cannot edit a completed or cancelled order')
+        return redirect(url_for('live_orders'))
+    categories = Category.query.order_by(Category.order).all()
+    return render_template('admin/edit_order.html', order=order, categories=categories, active_page='live_orders')
+
+@app.route('/api/update_order', methods=['POST'])
+@login_required
+def update_order():
+    data = request.json
+    order_id = data.get('order_id')
+    items = data.get('items', [])
+    
+    order = Order.query.get_or_404(order_id)
+    
+    if order.status in ['completed', 'cancelled']:
+        return jsonify({'error': 'Cannot edit a billed order'}), 400
+        
+    if not items:
+        # Cancel order
+        order.status = 'cancelled'
+        log_activity('order_edited', f"Order #{order_id} cancelled by removing all items by {current_user.name}")
+        db.session.commit()
+        socketio.emit('order_status_update', {'order_id': order.id, 'status': 'cancelled'}, namespace='/')
+        return jsonify({'success': True})
+        
+    # Compare items
+    old_items = {i.menu_item_id: i for i in order.items}
+    new_items_dict = {i['id']: i for i in items}
+    
+    changes = []
+    has_added = False
+    
+    # Check for removed or updated
+    for old_id, old_item in list(old_items.items()):
+        if old_id not in new_items_dict:
+            changes.append(f"Removed {old_item.menu_item.name}")
+            db.session.delete(old_item)
+        else:
+            new_qty = new_items_dict[old_id]['quantity']
+            if old_item.quantity != new_qty:
+                changes.append(f"Changed {old_item.menu_item.name} qty: {old_item.quantity} -> {new_qty}")
+                old_item.quantity = new_qty
+    
+    # Check for new items
+    for new_id, new_item_data in new_items_dict.items():
+        if new_id not in old_items:
+            menu_item = MenuItem.query.get(new_id)
+            if menu_item:
+                new_oi = OrderItem(
+                    order_id=order.id,
+                    menu_item_id=menu_item.id,
+                    variant=menu_item.variant_name,
+                    quantity=new_item_data['quantity'],
+                    price_at_order=menu_item.price
+                )
+                db.session.add(new_oi)
+                changes.append(f"Added {menu_item.name} (x{new_item_data['quantity']})")
+                has_added = True
+                
+    if changes:
+        if has_added and order.status == 'preparing':
+            order.has_new_items = True
+            
+        log_activity('order_edited', f"Order #{order_id} edited by {current_user.name}: " + ", ".join(changes))
+        db.session.commit()
+        
+        socketio.emit('order_status_update', {'order_id': order.id, 'status': order.status}, namespace='/')
+        
+    return jsonify({'success': True})
 
 @app.route('/order/<int:order_id>')
 def order_status(order_id):

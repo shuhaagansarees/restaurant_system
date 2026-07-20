@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kitchen Display Screen</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -45,6 +45,11 @@
                     <span>#{{ order.id }}</span>
                     <span>{{ order.created_at.strftime('%I:%M %p') }}</span>
                 </div>
+                {% if order.has_new_items %}
+                <div style="background-color: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 12px; display: inline-block;">
+                    NEW ITEMS ADDED
+                </div>
+                {% endif %}
                 <div class="kds-card-table">
                     {% if order.table %}Table {{ order.table.name }}{% else %}Parcel{% endif %}
                 </div>

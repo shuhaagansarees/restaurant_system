@@ -66,6 +66,7 @@ class Order(db.Model):
     customer_name = db.Column(db.String(100))
     customer_mobile = db.Column(db.String(15))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    has_new_items = db.Column(db.Boolean, default=False)
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
     table = db.relationship('Table')
 

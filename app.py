@@ -152,6 +152,10 @@ def not_found_error(error):
 
 # --- ROUTES ---
 
+@app.route('/ping')
+def ping():
+    return "pong", 200
+
 @app.route('/')
 def index():
     return redirect(url_for('menu'))

@@ -153,8 +153,9 @@ def not_found_error(error):
 # --- ROUTES ---
 
 @app.route('/ping')
+@limiter.exempt
 def ping():
-    return "pong", 200
+    return "OK", 200
 
 @app.route('/')
 def index():

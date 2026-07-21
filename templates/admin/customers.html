@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Customers - Admin Panel{% endblock %}
+{% block page_title %}Customer Base (CRM){% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <form method="GET" action="{{ url_for('admin_customers') }}" style="display:flex; gap:10px; width: 100%; max-width: 400px;">
+        <input type="text" name="q" value="{{ search_q }}" placeholder="Search by mobile or name" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; flex: 1;">
+        <button type="submit" class="btn-primary">Search</button>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Mobile</th>
+                <th>Name</th>
+                <th>Visits</th>
+                <th>Lifetime Spend</th>
+                <th>Last Visit</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in customers %}
+            <tr>
+                <td><strong>{{ c.mobile }}</strong></td>
+                <td>{{ c.name }}</td>
+                <td>{{ c.visits }}</td>
+                <td>₹{{ c.spend }}</td>
+                <td>{{ c.last_visit.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('admin_customer_profile', mobile=c.mobile) }}" class="btn-primary" style="padding: 5px 10px; font-size: 0.9rem; text-decoration: none;">View Profile</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align:center;">No customers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

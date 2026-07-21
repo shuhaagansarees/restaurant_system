@@ -49,6 +49,8 @@
             
             {% if current_user.role in ['admin', 'manager'] %}
             <a href="/admin/tables" class="nav-link {% if active_page == 'tables' %}active{% endif %}">Tables Management</a>
+            <a href="{{ url_for('admin_customers') }}" class="nav-link {% if active_page == 'customers' %}active{% endif %}">Customers</a>
+            <a href="{{ url_for('admin_coupons') }}" class="nav-link {% if active_page == 'coupons' %}active{% endif %}">Coupons</a>
             {% endif %}
             
             {% if current_user.role in ['admin', 'manager', 'cashier'] %}
@@ -72,6 +74,11 @@
             <div class="nav-section">SYSTEM</div>
             <a href="/admin/staff" class="nav-link {% if active_page == 'staff' %}active{% endif %}">Staff Management</a>
             <a href="/admin/activity_log" class="nav-link {% if active_page == 'activity_log' %}active{% endif %}">Activity Log</a>
+            {% endif %}
+            
+            {% if current_user.role == 'delivery' %}
+            <div class="nav-section">DELIVERY</div>
+            <a href="{{ url_for('my_deliveries') }}" class="nav-link {% if active_page == 'my_deliveries' %}active{% endif %}">My Deliveries</a>
             {% endif %}
             
             {% if current_user.role in ['admin', 'manager', 'chef'] %}

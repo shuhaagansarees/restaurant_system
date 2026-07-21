@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+
+{% block title %}My Deliveries{% endblock %}
+{% block page_title %}My Deliveries{% endblock %}
+
+{% block content %}
+<style>
+    .delivery-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .delivery-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+    .delivery-details { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; }
+    
+    .status-btn { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; text-align: center; display: block; margin-bottom: 10px; }
+    .btn-out { background: #3b82f6; color: white; }
+    .btn-delivered { background: #10b981; color: white; }
+    .status-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+
+<div style="max-width: 600px; margin: 0 auto;">
+    {% for o in orders %}
+    <div class="delivery-card">
+        <div class="delivery-header">
+            <h2 style="margin:0;">Order #{{ o.id }}</h2>
+            <span class="badge {{ o.status }}" style="font-size: 1rem; padding: 8px 12px;">{{ o.status|replace('_', ' ')|title }}</span>
+        </div>
+        
+        <div class="delivery-details">
+            <strong>Customer:</strong> {{ o.customer_name }} <br>
+            <strong>Mobile:</strong> <a href="tel:{{ o.customer_mobile }}">{{ o.customer_mobile }}</a> <br>
+            <strong>Address:</strong> {{ o.delivery_address }} <br>
+            {% if o.landmark %}<strong>Landmark:</strong> {{ o.landmark }} <br>{% endif %}
+            <strong>Items:</strong> {{ o.items|length }} items
+        </div>
+        
+        {% if o.status in ['new', 'preparing'] %}
+        <button class="status-btn btn-out" onclick="updateStatus({{ o.id }}, 'out_for_delivery')">Mark Out for Delivery</button>
+        {% elif o.status == 'out_for_delivery' %}
+        <button class="status-btn btn-delivered" onclick="updateStatus({{ o.id }}, 'delivered')">Mark Delivered</button>
+        {% endif %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding: 40px; background:white; border-radius:12px;">
+        <h3>No active deliveries assigned to you.</h3>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateStatus(orderId, newStatus) {
+    if (!confirm('Are you sure you want to update the status to ' + newStatus.replace('_', ' ').toUpperCase() + '?')) return;
+    
+    fetch('/api/update_order_status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ order_id: orderId, status: newStatus })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to update status');
+        }
+    });
+}
+</script>
+{% endblock %}

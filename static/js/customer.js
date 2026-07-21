@@ -80,17 +80,83 @@ function updateCartUI() {
     }
 }
 
+let appliedCoupon = null;
+let appliedDiscount = 0;
+
+async function applyCoupon() {
+    const code = document.getElementById('coupon-code').value;
+    const msgEl = document.getElementById('coupon-message');
+    if (!code) {
+        msgEl.innerText = 'Please enter a coupon code.';
+        msgEl.style.color = 'var(--danger-color)';
+        return;
+    }
+    
+    // Calculate total price
+    let totalPrice = 0;
+    for (let key in cart) {
+        totalPrice += cart[key].quantity * cart[key].price;
+    }
+    
+    msgEl.innerText = 'Applying...';
+    msgEl.style.color = 'var(--text-secondary)';
+    
+    try {
+        const response = await fetch('/api/verify_coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code, total: totalPrice })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            appliedCoupon = data.code;
+            appliedDiscount = data.discount;
+            msgEl.innerText = `${data.message} Discount: ₹${data.discount}`;
+            msgEl.style.color = 'var(--success-color)';
+            // update checkout total view
+            openCheckout();
+        } else {
+            appliedCoupon = null;
+            appliedDiscount = 0;
+            msgEl.innerText = data.message;
+            msgEl.style.color = 'var(--danger-color)';
+            openCheckout();
+        }
+    } catch (err) {
+        msgEl.innerText = 'Failed to verify coupon.';
+        msgEl.style.color = 'var(--danger-color)';
+    }
+}
+
 function openCheckout() {
     const reviewDiv = document.getElementById('cart-review');
     reviewDiv.innerHTML = '';
+    let totalPrice = 0;
     for(let key in cart) {
         const item = cart[key];
+        totalPrice += item.price * item.quantity;
         let varText = item.variant ? ` (${item.variant})` : '';
         reviewDiv.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">
             <span>${item.quantity}x ${item.name}${varText}</span>
             <span>₹${item.price * item.quantity}</span>
         </div>`;
     }
+    
+    if (appliedCoupon && appliedDiscount > 0) {
+        reviewDiv.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; color: var(--success-color); font-weight: bold;">
+            <span>Coupon (${appliedCoupon})</span>
+            <span>- ₹${appliedDiscount}</span>
+        </div>`;
+        totalPrice -= appliedDiscount;
+        if (totalPrice < 0) totalPrice = 0;
+    }
+    
+    reviewDiv.innerHTML += `<div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top: 1px solid var(--border-color); font-weight:bold;">
+        <span>Total</span>
+        <span>₹${totalPrice}</span>
+    </div>`;
+    
     document.getElementById('checkout-modal').classList.add('active');
 }
 
@@ -120,6 +186,7 @@ async function placeOrder() {
         order_type: orderType,
         customer_name: custName,
         customer_mobile: custMobile,
+        coupon_code: appliedCoupon,
         items: items
     };
     

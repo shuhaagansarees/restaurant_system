@@ -1,0 +1,90 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Coupons - Admin Panel{% endblock %}
+{% block page_title %}Offers & Coupons{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+    <!-- Create Coupon -->
+    <div class="form-container" style="align-self: start;">
+        <h3>Create New Coupon</h3>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Coupon Code (e.g. SHIVSHAKTI10)</label>
+                <input type="text" name="code" required style="text-transform: uppercase;">
+            </div>
+            <div class="form-group">
+                <label>Discount Type</label>
+                <select name="discount_type" required>
+                    <option value="flat">Flat Amount (₹)</option>
+                    <option value="percent">Percentage (%)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Discount Value</label>
+                <input type="number" step="0.01" name="discount_value" required>
+            </div>
+            <div class="form-group">
+                <label>Minimum Order Amount (Optional)</label>
+                <input type="number" step="0.01" name="min_order_amount" placeholder="e.g. 500">
+            </div>
+            <div class="form-group">
+                <label>Max Usage Limit (Optional)</label>
+                <input type="number" name="max_usage_limit" placeholder="e.g. 50">
+            </div>
+            <div class="form-group">
+                <label>Expiry Date (Optional)</label>
+                <input type="date" name="expiry_date">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Create Coupon</button>
+        </form>
+    </div>
+
+    <!-- Coupons List -->
+    <div class="table-container">
+        <h3>Active & Past Coupons</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Discount</th>
+                    <th>Min Order</th>
+                    <th>Usage</th>
+                    <th>Expiry</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in coupons %}
+                <tr>
+                    <td><strong>{{ c.code }}</strong></td>
+                    <td>{{ '₹' if c.discount_type == 'flat' else '' }}{{ c.discount_value }}{{ '%' if c.discount_type == 'percent' else '' }}</td>
+                    <td>{{ '₹'+(c.min_order_amount|string) if c.min_order_amount else '-' }}</td>
+                    <td>{{ c.usage_count }} / {{ c.max_usage_limit if c.max_usage_limit else '∞' }}</td>
+                    <td>{{ c.expiry_date.strftime('%Y-%m-%d') if c.expiry_date else '-' }}</td>
+                    <td>
+                        <span class="badge {% if c.is_active %}completed{% else %}cancelled{% endif %}">
+                            {{ 'Active' if c.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_coupons_toggle', id=c.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-secondary" style="padding: 5px 10px; font-size: 0.9rem;">
+                                {{ 'Deactivate' if c.is_active else 'Activate' }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;">No coupons found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

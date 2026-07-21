@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Customer Profile - {{ mobile }}{% endblock %}
+{% block page_title %}Customer Profile: {{ profile.name if profile and profile.name else mobile }}{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+    <!-- Profile & Notes -->
+    <div class="form-container" style="align-self: start;">
+        <h3>Profile Details</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" value="{{ mobile }}" disabled>
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" value="{{ profile.name if profile and profile.name else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Staff Notes</label>
+                <textarea name="notes" rows="5" placeholder="e.g. VIP Customer, prefers less spicy food...">{{ profile.notes if profile and profile.notes else '' }}</textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Save Profile</button>
+        </form>
+
+        <div style="margin-top: 20px; padding: 15px; background: var(--bg-color); border-radius: 8px;">
+            <p><strong>Total Orders:</strong> {{ orders|length }}</p>
+            <p><strong>Lifetime Spend:</strong> ₹{{ total_spend }}</p>
+        </div>
+    </div>
+
+    <!-- Order History -->
+    <div class="table-container">
+        <h3>Order History</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td><a href="{{ url_for('order_status', order_id=o.id) }}">#{{ o.id }}</a></td>
+                    <td>{{ o.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ o.type|title }}</td>
+                    <td><span class="badge {{ o.status }}">{{ o.status|title }}</span></td>
+                    <td>
+                        {% if o.id in invoice_map %}
+                            ₹{{ invoice_map[o.id].total }}
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center;">No orders found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

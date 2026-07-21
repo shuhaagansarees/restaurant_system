@@ -91,6 +91,14 @@
         <h3>Complete Order</h3>
         <div id="cart-review" style="margin-bottom: 20px; font-size: 0.9rem;"></div>
         
+        <div style="margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="coupon-code" placeholder="Have a coupon code?" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; text-transform: uppercase;">
+                <button type="button" class="btn-secondary" onclick="applyCoupon()" style="padding: 10px 15px;">Apply</button>
+            </div>
+            <div id="coupon-message" style="margin-top: 5px; font-size: 0.9rem; font-weight: 500;"></div>
+        </div>
+
         {% if not table %}
             <div class="form-group">
                 <label>Table Selection (Optional for Dine-in)</label>

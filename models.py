@@ -65,10 +65,16 @@ class Order(db.Model):
     status = db.Column(db.String(20), default='new') # new/preparing/served/completed/cancelled
     customer_name = db.Column(db.String(100))
     customer_mobile = db.Column(db.String(15))
+    coupon_code = db.Column(db.String(50), nullable=True)
+    delivery_address = db.Column(db.Text, nullable=True)
+    landmark = db.Column(db.String(100), nullable=True)
+    delivery_charge = db.Column(db.Float, default=0.0)
+    delivery_staff_id = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     has_new_items = db.Column(db.Boolean, default=False)
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
     table = db.relationship('Table')
+    delivery_staff = db.relationship('User', foreign_keys=[delivery_staff_id])
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
@@ -91,8 +97,10 @@ class Invoice(db.Model):
     gst_percent = db.Column(db.Float, default=5.0)
     gst_amount = db.Column(db.Float, default=0.0)
     round_off = db.Column(db.Float, default=0.0)
+    delivery_charge = db.Column(db.Float, default=0.0)
     total = db.Column(db.Float, nullable=False)
     payment_method = db.Column(db.String(20)) # cash/upi/card/settled/credit
+    coupon_code = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     order = db.relationship('Order')
@@ -146,3 +154,22 @@ class ActivityLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User')
+
+class Coupon(db.Model):
+    __tablename__ = 'coupons'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    discount_type = db.Column(db.String(10), nullable=False) # flat, percent
+    discount_value = db.Column(db.Float, nullable=False)
+    min_order_amount = db.Column(db.Float, default=0.0)
+    expiry_date = db.Column(db.DateTime, nullable=True)
+    max_usage_limit = db.Column(db.Integer, nullable=True)
+    usage_count = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+
+class CustomerProfile(db.Model):
+    __tablename__ = 'customers'
+    mobile = db.Column(db.String(15), primary_key=True)
+    name = db.Column(db.String(100), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

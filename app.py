@@ -29,7 +29,7 @@ def role_required(*roles):
     return wrapper
 
 # Load models
-from models import db, User, Branch, Category, MenuItem, Table, Order, OrderItem, Invoice, CreditLedger, Refund, ActivityLog
+from models import db, User, Branch, Category, MenuItem, Table, Order, OrderItem, Invoice, CreditLedger, Refund, ActivityLog, Coupon, CustomerProfile
 
 load_dotenv()
 
@@ -73,15 +73,26 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
     
-    # Safe auto-migration for Phase 17 (has_new_items)
+    # Safe auto-migration for Phase 20 (Coupons & Delivery)
     try:
         from sqlalchemy import text
-        db.session.execute(text("ALTER TABLE orders ADD COLUMN has_new_items BOOLEAN DEFAULT 0"))
-        db.session.commit()
-        print("Phase 17 migration successful: added has_new_items column.")
-    except Exception as e:
-        db.session.rollback()
-        # print("Phase 17 migration already applied or skipped.")
+        queries = [
+            "ALTER TABLE orders ADD COLUMN has_new_items BOOLEAN DEFAULT 0",
+            "ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(50)",
+            "ALTER TABLE orders ADD COLUMN delivery_address TEXT",
+            "ALTER TABLE orders ADD COLUMN landmark VARCHAR(100)",
+            "ALTER TABLE orders ADD COLUMN delivery_charge FLOAT DEFAULT 0.0",
+            "ALTER TABLE orders ADD COLUMN delivery_staff_id INTEGER REFERENCES staff_users(id)",
+            "ALTER TABLE invoices ADD COLUMN delivery_charge FLOAT DEFAULT 0.0",
+            "ALTER TABLE invoices ADD COLUMN coupon_code VARCHAR(50)"
+        ]
+        for q in queries:
+            try:
+                db.session.execute(text(q))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+    except Exception:
         pass
     # Auto-seed logic for fresh deployments
     if User.query.count() == 0:
@@ -292,8 +303,13 @@ def place_order():
     table_name = data.get('table_name')
     customer_name = data.get('customer_name', '')
     customer_mobile = data.get('customer_mobile', '')
+    coupon_code = data.get('coupon_code', None)
+    delivery_address = data.get('delivery_address', None)
+    landmark = data.get('landmark', None)
+    delivery_charge = float(data.get('delivery_charge', 0.0))
+    delivery_staff_id = data.get('delivery_staff_id', None)
     items = data.get('items', [])
-    order_type = data.get('order_type', 'dine-in') # dine-in or parcel
+    order_type = data.get('order_type', 'dine-in') # dine-in, parcel, home-delivery
     
     table = None
     if table_name:
@@ -316,12 +332,17 @@ def place_order():
             table.session_start_time = datetime.utcnow()
 
     new_order = Order(
-        branch_id=branch_id,
+        branch_id=branch_id, 
         table_id=table.id if table else None,
         type=order_type,
         status='new',
         customer_name=customer_name,
-        customer_mobile=customer_mobile
+        customer_mobile=customer_mobile,
+        coupon_code=coupon_code,
+        delivery_address=delivery_address,
+        landmark=landmark,
+        delivery_charge=delivery_charge,
+        delivery_staff_id=delivery_staff_id
     )
     db.session.add(new_order)
     db.session.commit() # commit to get order id
@@ -641,10 +662,30 @@ def get_qr(table_id):
 
 @app.route('/admin/new_parcel')
 @login_required
-@role_required('manager', 'waiter', 'cashier')
+@role_required('admin', 'manager', 'cashier')
 def new_parcel():
-    categories = Category.query.all()
-    return render_template('admin/new_parcel.html', categories=categories, active_page='new_parcel')
+    categories = Category.query.order_by(Category.sort_order).all()
+    items = MenuItem.query.filter_by(is_available=True).all()
+    return render_template('admin/new_parcel.html', categories=categories, items=items, active_page='new_parcel')
+
+@app.route('/admin/new_delivery')
+@login_required
+@role_required('admin', 'manager', 'cashier')
+def new_delivery():
+    categories = Category.query.order_by(Category.sort_order).all()
+    items = MenuItem.query.filter_by(is_available=True).all()
+    riders = User.query.filter_by(role='delivery').all()
+    return render_template('admin/new_delivery.html', categories=categories, items=items, riders=riders, active_page='new_delivery')
+
+@app.route('/admin/my_deliveries')
+@login_required
+@role_required('delivery')
+def my_deliveries():
+    orders = Order.query.filter(
+        Order.delivery_staff_id == current_user.id,
+        Order.status.in_(['new', 'preparing', 'out_for_delivery'])
+    ).order_by(Order.created_at.desc()).all()
+    return render_template('admin/my_deliveries.html', orders=orders, active_page='my_deliveries')
 
 @app.route('/admin/billing')
 @login_required
@@ -722,8 +763,9 @@ def get_bill_details(type, id):
 def settle_bill():
     data = request.json
     order_ids = data.get('order_ids', [])
-    discount = float(data.get('discount', 0))
     payment_method = data.get('payment_method')
+    coupon_code = data.get('coupon_code', '').strip().upper()
+    delivery_charge = float(data.get('delivery_charge', 0.0))
     
     orders = Order.query.filter(Order.id.in_(order_ids)).all()
     if not orders:
@@ -736,23 +778,46 @@ def settle_bill():
         for item in order.items:
             subtotal += (item.quantity * item.price_at_order)
             
-    # GST Calculation
-    # Formula: gst = (subtotal - discount) * 0.05
-    taxable = subtotal - discount
-    gst_amount = taxable * 0.05
+    discount = 0.0
+    used_coupon = None
     
-    # Rounding off
-    # Formula: round_off = rounded_total - exact_total
+    # Try the manual coupon code first, else fall back to the one attached to main_order
+    if not coupon_code and main_order.coupon_code:
+        coupon_code = main_order.coupon_code
+        
+    if coupon_code:
+        c = Coupon.query.filter_by(code=coupon_code).first()
+        if c and c.is_active:
+            valid = True
+            if c.expiry_date and datetime.utcnow() > c.expiry_date:
+                valid = False
+            if c.max_usage_limit and c.usage_count >= c.max_usage_limit:
+                valid = False
+            if c.min_order_amount and subtotal < c.min_order_amount:
+                valid = False
+                
+            if valid:
+                used_coupon = c.code
+                if c.discount_type == 'flat':
+                    discount = c.discount_value
+                elif c.discount_type == 'percent':
+                    discount = (subtotal * c.discount_value) / 100.0
+                
+                # Cap discount
+                if discount > subtotal:
+                    discount = subtotal
+                    
+                # Increment usage
+                c.usage_count += 1
+                
+    taxable = subtotal - discount + delivery_charge
+    gst_amount = taxable * 0.05
     exact_total = taxable + gst_amount
     rounded_total = round(exact_total)
     round_off = rounded_total - exact_total
     
-    # Generate Invoice Number MB-XXXXX
     last_invoice = Invoice.query.order_by(Invoice.id.desc()).first()
-    if last_invoice:
-        next_num = int(last_invoice.invoice_number.split('-')[1]) + 1
-    else:
-        next_num = 1
+    next_num = 1 if not last_invoice else int(last_invoice.invoice_number.split('-')[1]) + 1
     inv_number = f"MB-{str(next_num).zfill(5)}"
     
     invoice = Invoice(
@@ -760,15 +825,18 @@ def settle_bill():
         invoice_number=inv_number,
         subtotal=subtotal,
         discount=discount,
+        gst_percent=5.0,
         gst_amount=gst_amount,
         round_off=round_off,
+        delivery_charge=delivery_charge,
         total=rounded_total,
-        payment_method=payment_method
+        payment_method=payment_method,
+        coupon_code=used_coupon
     )
     db.session.add(invoice)
     db.session.flush() # Get invoice.id
     
-    if payment_method == 'Credit/Udhar':
+    if payment_method == 'Credit/Udhar' or payment_method == 'credit':
         customer_name = main_order.customer_name or 'Unknown Customer'
         customer_mobile = main_order.customer_mobile or '0000000000'
         ledger = CreditLedger(
@@ -787,9 +855,13 @@ def settle_bill():
             table.status = 'vacant'
             table.session_start_time = None
             
+    # Record coupon on main order if it wasn't there
+    if used_coupon and not main_order.coupon_code:
+        main_order.coupon_code = used_coupon
+            
     # Mark orders settled
     for order in orders:
-        order.status = 'settled'
+        order.status = 'completed'
         
     db.session.commit()
     log_activity('bill_settled', f"Settled orders {order_ids} into Invoice #{inv_number}. Total: Rs.{rounded_total}. Method: {payment_method}")
@@ -976,6 +1048,152 @@ def toggle_item():
         log_activity('item_availability_toggled', f"Item '{item.name}' availability set to {is_avail}.")
         return jsonify({'success': True})
     return jsonify({'success': False})
+
+@app.route('/admin/customers')
+@login_required
+def admin_customers():
+    # Fetch all orders to aggregate
+    orders = Order.query.filter(Order.customer_mobile != None).all()
+    counts = {}
+    for o in orders:
+        m = o.customer_mobile
+        if not m: continue
+        if m not in counts:
+            counts[m] = {'name': o.customer_name or 'Unknown', 'visits': 0, 'spend': 0, 'last_visit': o.created_at}
+        counts[m]['visits'] += 1
+        counts[m]['spend'] += sum(i.price_at_order * i.quantity for i in o.items)
+        if o.created_at > counts[m]['last_visit']:
+            counts[m]['last_visit'] = o.created_at
+            
+    # Load CRM profiles to get notes
+    profiles = CustomerProfile.query.all()
+    profile_map = {p.mobile: p for p in profiles}
+    
+    customers_data = []
+    search_q = request.args.get('q', '').strip()
+    
+    for m, v in counts.items():
+        if search_q and search_q not in m and search_q.lower() not in v['name'].lower():
+            continue
+        p = profile_map.get(m)
+        notes = p.notes if p else ''
+        customers_data.append({
+            'mobile': m,
+            'name': p.name if p and p.name else v['name'],
+            'visits': v['visits'],
+            'spend': v['spend'],
+            'last_visit': v['last_visit'],
+            'notes': notes
+        })
+        
+    customers_data.sort(key=lambda x: x['spend'], reverse=True)
+    return render_template('admin/customers.html', customers=customers_data, search_q=search_q)
+
+@app.route('/admin/customer/<mobile>', methods=['GET', 'POST'])
+@login_required
+def admin_customer_profile(mobile):
+    profile = CustomerProfile.query.get(mobile)
+    if request.method == 'POST':
+        notes = request.form.get('notes')
+        name = request.form.get('name')
+        if not profile:
+            profile = CustomerProfile(mobile=mobile, name=name, notes=notes)
+            db.session.add(profile)
+        else:
+            profile.name = name
+            profile.notes = notes
+        db.session.commit()
+        flash('Customer profile updated.', 'success')
+        return redirect(url_for('admin_customer_profile', mobile=mobile))
+        
+    orders = Order.query.filter_by(customer_mobile=mobile).order_by(Order.created_at.desc()).all()
+    invoices = Invoice.query.join(Order).filter(Order.customer_mobile == mobile).all()
+    invoice_map = {inv.order_id: inv for inv in invoices}
+    
+    total_spend = sum(inv.total for inv in invoices)
+    
+    return render_template('admin/customer_profile.html', mobile=mobile, profile=profile, orders=orders, invoice_map=invoice_map, total_spend=total_spend)
+
+@app.route('/admin/coupons', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'manager')
+def admin_coupons():
+    if request.method == 'POST':
+        code = request.form.get('code').strip().upper()
+        dtype = request.form.get('discount_type')
+        val = float(request.form.get('discount_value', 0))
+        min_order = float(request.form.get('min_order_amount') or 0)
+        limit = request.form.get('max_usage_limit')
+        expiry = request.form.get('expiry_date')
+        
+        c = Coupon(
+            code=code,
+            discount_type=dtype,
+            discount_value=val,
+            min_order_amount=min_order,
+            max_usage_limit=int(limit) if limit else None,
+            expiry_date=datetime.strptime(expiry, '%Y-%m-%d') if expiry else None
+        )
+        db.session.add(c)
+        db.session.commit()
+        flash('Coupon added successfully.', 'success')
+        return redirect(url_for('admin_coupons'))
+        
+    coupons = Coupon.query.order_by(Coupon.id.desc()).all()
+    return render_template('admin/coupons.html', coupons=coupons, active_page='coupons')
+
+@app.route('/admin/coupons/toggle/<int:id>', methods=['POST'])
+@login_required
+@role_required('admin', 'manager')
+def admin_coupons_toggle(id):
+    c = Coupon.query.get_or_404(id)
+    c.is_active = not c.is_active
+    db.session.commit()
+    flash(f'Coupon {c.code} status updated.', 'success')
+    return redirect(url_for('admin_coupons'))
+
+@app.route('/api/verify_coupon', methods=['POST'])
+@csrf.exempt
+def verify_coupon():
+    data = request.json
+    code = data.get('code', '').strip().upper()
+    total = float(data.get('total', 0))
+    
+    if not code:
+        return jsonify({'success': False, 'message': 'Code required.'})
+        
+    c = Coupon.query.filter_by(code=code).first()
+    if not c:
+        return jsonify({'success': False, 'message': 'Invalid coupon code.'})
+        
+    if not c.is_active:
+        return jsonify({'success': False, 'message': 'Coupon is not active.'})
+        
+    if c.expiry_date and datetime.utcnow() > c.expiry_date:
+        return jsonify({'success': False, 'message': 'Coupon has expired.'})
+        
+    if c.max_usage_limit and c.usage_count >= c.max_usage_limit:
+        return jsonify({'success': False, 'message': 'Coupon usage limit reached.'})
+        
+    if c.min_order_amount and total < c.min_order_amount:
+        return jsonify({'success': False, 'message': f'Minimum order amount of ₹{c.min_order_amount} required.'})
+        
+    discount = 0
+    if c.discount_type == 'flat':
+        discount = c.discount_value
+    elif c.discount_type == 'percent':
+        discount = (total * c.discount_value) / 100.0
+        
+    # Cap discount at total to avoid negative totals
+    if discount > total:
+        discount = total
+        
+    return jsonify({
+        'success': True,
+        'discount': round(discount, 2),
+        'code': c.code,
+        'message': 'Coupon applied successfully!'
+    })
 
 @app.route('/admin/reports')
 @login_required

@@ -468,7 +468,8 @@ def update_order():
 def order_status(order_id):
     order = Order.query.get_or_404(order_id)
     total_amount = sum(item.price_at_order * item.quantity for item in order.items)
-    return render_template('customer/status.html', order=order, total_amount=total_amount)
+    has_feedback = Feedback.query.filter_by(order_id=order_id).first() is not None
+    return render_template('customer/status.html', order=order, total_amount=total_amount, has_feedback=has_feedback)
 
 @app.route('/admin')
 def admin_index():

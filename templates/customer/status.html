@@ -66,7 +66,7 @@
     </div>
     {% endif %}
 
-    {% if order.status|lower == 'completed' %}
+    {% if order.status|lower == 'completed' and not has_feedback %}
     <div id="feedback-section" style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
         <h4>How was your food?</h4>
         <div id="star-rating" style="font-size: 2rem; color: #ccc; cursor: pointer; margin: 10px 0;">
@@ -78,6 +78,10 @@
         </div>
         <textarea id="feedback-comment" placeholder="Any comments? (Optional)" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px;"></textarea>
         <button onclick="submitFeedback({{ order.id }})" class="btn-primary" style="width: 100%;">Submit Feedback</button>
+    </div>
+    {% elif order.status|lower == 'completed' and has_feedback %}
+    <div style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+        <h4 style="color: green;">Thank you for your feedback! ✅</h4>
     </div>
     {% endif %}
 
@@ -100,16 +104,8 @@
             const text = document.getElementById('status-text');
             const icon = document.getElementById('status-icon');
             
-            // Remove all existing status classes
-            circle.className = `status-circle status-${status}`;
-            text.innerText = status.toUpperCase();
-            
-            if (status === 'new') icon.innerText = '⏳';
-            else if (status === 'preparing') icon.innerText = '🍳';
-            else if (status === 'served' || status === 'completed') icon.innerText = '✅';
-            
-            // Optionally reload page for full sync
-            // window.location.reload();
+            // We reload the page to ensure the feedback form and buttons are accurately shown/hidden
+            window.location.reload();
         }
     });
 

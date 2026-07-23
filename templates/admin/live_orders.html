@@ -128,6 +128,7 @@
 
 <!-- Audio for notification -->
 <audio id="notif-sound" src="/static/audio/beep.wav" preload="auto"></audio>
+<audio id="waiter-sound" src="/static/audio/chime.wav" preload="auto"></audio>
 {% endblock %}
 
 {% block scripts %}
@@ -216,7 +217,7 @@
         `;
         panel.appendChild(callCard);
         
-        const audio = document.getElementById('notif-sound');
+        const audio = document.getElementById('waiter-sound');
         if (audio) {
             audio.play().catch(e => console.log('Audio play failed:', e));
         }

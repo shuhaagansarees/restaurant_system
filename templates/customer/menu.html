@@ -14,7 +14,7 @@
     {% if table %}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
             <p style="margin:0;">Ordering for <strong>Table {{ table.name }}</strong></p>
-            <button onclick="callWaiter('{{ table.name }}')" class="btn-primary" style="background: #ef4444; border: none; padding: 6px 12px; font-size: 0.8rem; border-radius: 20px;">🛎️ Call Waiter</button>
+            <button onclick="callWaiter('{{ table.name }}')" class="btn-primary" style="background-color: var(--danger); border: none; padding: 6px 12px; font-size: 0.8rem; border-radius: 20px;">🛎️ Call Waiter</button>
         </div>
     {% else %}
         <p>Takeaway / Parcel Order</p>
@@ -191,7 +191,7 @@
             body: JSON.stringify({ table_name: tName, order_id: null })
         }).then(r => r.json()).then(data => {
             if (data.success) {
-                alert('Waiter has been called to your table!');
+                showToast('🛎️ Waiter has been called to your table!');
             }
         });
     }

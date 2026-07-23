@@ -53,7 +53,7 @@
     
     {% if order.table and order.status not in ['completed', 'cancelled'] %}
     <div style="margin-top: 15px; text-align: center;">
-        <button onclick="callWaiter('{{ order.table.name }}', {{ order.id }})" class="btn-primary" style="background: var(--brand-orange); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
+        <button onclick="callWaiter('{{ order.table.name }}', {{ order.id }})" class="btn-primary" style="background-color: var(--danger); width: 100%; display: block; text-align: center; text-decoration: none; font-size: 1.1rem; padding: 14px;">
             🛎️ Call Waiter
         </button>
     </div>
@@ -136,7 +136,7 @@
             body: JSON.stringify({ table_name: tableName, order_id: orderId })
         }).then(r => r.json()).then(data => {
             if (data.success) {
-                alert('Waiter has been called!');
+                showToast('🛎️ Waiter has been called to your table!');
             }
         });
     }

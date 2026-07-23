@@ -1,37 +1,17 @@
-from app import app, db
-from models import User
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
-app.config['TESTING'] = True
-app.config['WTF_CSRF_ENABLED'] = False
-
-with app.app_context():
-    # Make sure we have a test user
-    u = User.query.filter_by(mobile='9999999999').first()
-    if not u:
-        u = User(mobile='9999999999', name='Admin', role='admin')
-        u.set_password('admin123')
-        db.session.add(u)
-        db.session.commit()
-        
-    client = app.test_client()
-    
-    import sys
-    sys.stdout.reconfigure(encoding='utf-8')
-    
-    # Login
-    client.post('/admin/login', data={'mobile': '9999999999', 'password': 'admin123'})
-    
-    print("--- CUSTOMERS PAGE HTML ---")
-    r_cust = client.get('/admin/customers')
-    html_cust = r_cust.data.decode('utf-8')
-    # Print just the table part to keep output short
-    start_table = html_cust.find('<table')
-    end_table = html_cust.find('</table>') + 8
-    print(html_cust[start_table:end_table])
-    
-    print("\n--- COUPONS PAGE HTML ---")
-    r_coup = client.get('/admin/coupons')
-    html_coup = r_coup.data.decode('utf-8')
-    start_table = html_coup.find('<table')
-    end_table = html_coup.find('</table>') + 8
-    print(html_coup[start_table:end_table])
+with open('templates/customer/status.html', 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+    for i, line in enumerate(lines):
+        if 'Call Waiter' in line:
+            # Print the context lines around the button
+            print("--- HTML OUTPUT: CALL WAITER BUTTON ---")
+            print("".join(lines[i-2:i+3]))
+            print("--------------------------------------")
+            break
+            
+with open('templates/customer/status.html', 'r', encoding='utf-8') as f:
+    content = f.read()
+    if 'showToast' in content:
+        print("Confirmed: showToast() is being used instead of alert()")

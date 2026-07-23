@@ -12,6 +12,26 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+    
+    <!-- Global Toast Container -->
+    <div id="toast-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;"></div>
+    <style>
+        @keyframes fadein { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+        .toast-msg { background: #1f2937; color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: fadein 0.3s, fadeout 0.3s 2.7s; text-align: center; pointer-events: auto; }
+    </style>
+    <script>
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+    </script>
+
     <div class="app-container">
         {% block content %}{% endblock %}
     </div>

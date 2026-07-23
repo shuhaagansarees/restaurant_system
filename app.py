@@ -1615,16 +1615,27 @@ def call_waiter():
     table_name = data.get('table_name')
     order_id = data.get('order_id')
     
+    print(f"DEBUG API: /api/call_waiter hit. Table: {table_name}, Order: {order_id}", flush=True)
+    
     call = WaiterCall(table_name=table_name, order_id=order_id, status='pending')
     db.session.add(call)
     db.session.commit()
     
-    socketio.emit('new_waiter_call', {
-        'id': call.id,
-        'table_name': table_name,
-        'order_id': order_id,
-        'time': call.created_at.strftime('%H:%M')
-    }, namespace='/')
+    # Safe fetch of time
+    time_str = call.created_at.strftime('%H:%M') if call.created_at else "Now"
+    
+    print(f"DEBUG API: EMITTING WAITER CALL {table_name}. Payload ID: {call.id}, Time: {time_str}", flush=True)
+    
+    try:
+        socketio.emit('new_waiter_call', {
+            'id': call.id,
+            'table_name': table_name,
+            'order_id': order_id,
+            'time': time_str
+        }, namespace='/')
+        print(f"DEBUG API: EMIT SUCCESSFUL for {table_name}", flush=True)
+    except Exception as e:
+        print(f"DEBUG API: EMIT FAILED: {e}", flush=True)
     
     return jsonify({'success': True})
 

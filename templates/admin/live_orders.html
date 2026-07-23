@@ -202,8 +202,9 @@
     
     // WebSockets logic
     
+    console.log("Waiter call listener registered");
     socket.on('new_waiter_call', (data) => {
-        console.log("New Waiter Call:", data);
+        console.log("RECEIVED new_waiter_call event:", data);
         const panel = document.getElementById('waiter-calls-panel');
         const callCard = document.createElement('div');
         callCard.id = `waiter-call-${data.id}`;

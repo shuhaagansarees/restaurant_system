@@ -173,3 +173,21 @@ class CustomerProfile(db.Model):
     name = db.Column(db.String(100), nullable=True)
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class WaiterCall(db.Model):
+    __tablename__ = 'waiter_calls'
+    id = db.Column(db.Integer, primary_key=True)
+    table_name = db.Column(db.String(20), nullable=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
+    status = db.Column(db.String(20), default='pending') # pending/resolved
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Feedback(db.Model):
+    __tablename__ = 'feedback'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False) # 1 to 5
+    comment = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    order = db.relationship('Order')

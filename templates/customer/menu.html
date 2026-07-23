@@ -12,7 +12,10 @@
         </div>
     </div>
     {% if table %}
-        <p>Ordering for <strong>Table {{ table.name }}</strong></p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <p style="margin:0;">Ordering for <strong>Table {{ table.name }}</strong></p>
+            <button onclick="callWaiter('{{ table.name }}')" class="btn-primary" style="background: #ef4444; border: none; padding: 6px 12px; font-size: 0.8rem; border-radius: 20px;">🛎️ Call Waiter</button>
+        </div>
     {% else %}
         <p>Takeaway / Parcel Order</p>
     {% endif %}
@@ -132,6 +135,67 @@
     const currentTable = "{{ table_name if table_name else '' }}";
     let currentLang = localStorage.getItem('menu_lang') || 'en';
     
+    function submitOrder() {
+        if (cart.length === 0) {
+            alert('Your cart is empty!');
+            return;
+        }
+
+        const btn = document.getElementById('place-order-btn');
+        btn.disabled = true;
+        btn.innerText = 'Placing...';
+
+        const payload = {
+            table_name: tableName,
+            items: cart,
+            order_type: tableName ? 'dine-in' : 'parcel'
+        };
+
+        fetch('/api/place_order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Play success sound
+                const beep = document.getElementById('success-beep');
+                if (beep) {
+                    beep.play().catch(e => console.log('Beep failed:', e));
+                }
+                
+                setTimeout(() => {
+                    window.location.href = `/order/${data.order_id}`;
+                }, 500);
+            } else {
+                alert(data.message || 'Error placing order');
+                btn.disabled = false;
+                btn.innerText = 'Place Order';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Network error');
+            btn.disabled = false;
+            btn.innerText = 'Place Order';
+        });
+    }
+
+    function callWaiter(tName) {
+        fetch('/api/call_waiter', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ table_name: tName, order_id: null })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert('Waiter has been called to your table!');
+            }
+        });
+    }
+
     function setLang(lang) {
         currentLang = lang;
         localStorage.setItem('menu_lang', lang);

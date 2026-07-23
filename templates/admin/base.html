@@ -51,6 +51,7 @@
             <a href="/admin/tables" class="nav-link {% if active_page == 'tables' %}active{% endif %}">Tables Management</a>
             <a href="{{ url_for('admin_customers') }}" class="nav-link {% if active_page == 'customers' %}active{% endif %}">Customers</a>
             <a href="{{ url_for('admin_coupons') }}" class="nav-link {% if active_page == 'coupons' %}active{% endif %}">Coupons</a>
+            <a href="{{ url_for('admin_feedback') }}" class="nav-link {% if active_page == 'feedback' %}active{% endif %}">Feedback</a>
             {% endif %}
             
             {% if current_user.role in ['admin', 'manager', 'cashier'] %}

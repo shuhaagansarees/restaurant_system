@@ -35,6 +35,9 @@ with app.app_context():
     
     # 4. API verify coupon
     c = app.test_client()
+    import sys
+    sys.stdout.reconfigure(encoding='utf-8')
+    
     r1 = c.post('/api/verify_coupon', json={'code': 'TEST500', 'total': 400})
     print("Coupon 400 total:", r1.json) # Should fail min order
     

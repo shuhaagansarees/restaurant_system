@@ -655,7 +655,7 @@ def get_qr(table_id):
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     
-    img_io = BytesIO()
+    img_io = io.BytesIO()
     img.save(img_io, 'PNG')
     img_io.seek(0)
     from flask import send_file

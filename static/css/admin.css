@@ -569,6 +569,13 @@ body {
    Mobile Responsive Styles (Phase 26)
    ========================================================================== */
 @media (max-width: 768px) {
+
+    .kanban-board {
+        flex-direction: column !important;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        height: auto !important;
+    }
     /* Sidebar as Drawer */
     .sidebar {
         position: fixed;
@@ -684,13 +691,21 @@ body {
     display: none;
 }
 @media (max-width: 768px) {
+
+    .kanban-board {
+        flex-direction: column !important;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        height: auto !important;
+    }
     .category-tabs-wrapper {
         display: flex;
-        overflow-x: auto;
+        overflow-x: visible !important;
+        flex-wrap: wrap !important;
         gap: 10px;
         margin-bottom: 20px;
         padding-bottom: 5px;
-        white-space: nowrap;
+        white-space: normal !important;
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
@@ -1455,6 +1470,7 @@ body {
     .petpooja-topbar {
         padding: 8px 12px !important;
         gap: 8px !important;
+        flex-wrap: wrap !important;
     }
 
     .brand-outlet-title {
@@ -1645,12 +1661,11 @@ body {
     }
     
     .petpooja-right-tools {
-        gap: 5px !important;
-        overflow-x: auto;
-        white-space: nowrap;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-        flex-wrap: nowrap;
+        gap: 8px !important;
+        overflow-x: visible !important;
+        white-space: normal !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-start;
     }
     .petpooja-right-tools::-webkit-scrollbar {
         display: none;
@@ -1663,6 +1678,13 @@ body {
 }
 
 @media (max-width: 768px) {
+
+    .kanban-board {
+        flex-direction: column !important;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        height: auto !important;
+    }
     /* Force 1 column grids on ALL mobile devices, not just very small ones */
     .dashboard-grid {
         grid-template-columns: 1fr !important;

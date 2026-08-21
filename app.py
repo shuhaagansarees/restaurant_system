@@ -3356,3 +3356,15 @@ def magic_add_menu():
     except Exception as e:
         db.session.rollback()
         return f"ERROR: {str(e)}"
+
+
+@app.route('/admin/magic_update_admin')
+def magic_update_admin():
+    from werkzeug.security import generate_password_hash
+    admin = User.query.filter_by(role='admin').first()
+    if admin:
+        admin.mobile = '8141005168'
+        admin.password = generate_password_hash('soulsip@2000')
+        db.session.commit()
+        return 'Admin updated successfully! New mobile: 8141005168'
+    return 'Admin not found.'

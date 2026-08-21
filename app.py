@@ -1621,7 +1621,7 @@ def settle_bill():
             
     # Mark orders settled
     for order in orders:
-        order.status = 'completed'
+        order.status = 'settled'
         
     db.session.commit()
     log_activity('bill_settled', f"Settled orders {order_ids} into Invoice #{invoice.invoice_number}. Total: Rs.{rounded_total}. Method: {payment_method}")

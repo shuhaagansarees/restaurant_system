@@ -860,5 +860,18 @@ function updateStatus(orderId, newStatus) {
     // Initial run and then every 30 seconds
     updateOrderTimers();
     setInterval(updateOrderTimers, 30000);
+
+    // Listen for new orders or status updates to auto-refresh the KDS
+    if (window.socket) {
+        window.socket.on('new_order', function(data) {
+            console.log('New order received, refreshing...');
+            window.location.reload();
+        });
+        
+        window.socket.on('order_status_update', function(data) {
+            console.log('Order status updated, refreshing...');
+            window.location.reload();
+        });
+    }
 </script>
 {% endblock %}

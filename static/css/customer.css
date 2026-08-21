@@ -1,11 +1,11 @@
 :root {
-    --bg-color: #f8f9fa;
+    --bg-color: #eef4e3; /* Light pastel green from PDF */
     --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --primary-color: #799e4b; /* Soul Sip Green */
-    --primary-hover: #66873e;
+    --text-secondary: #5a6b46;
+    --primary-color: #618b2c; /* Rich Soul Sip Green */
+    --primary-hover: #4d7023;
     --card-bg: #ffffff;
-    --border-color: #e5e7eb;
+    --border-color: #cddcb6;
     
     --success: #10b981;
     --warning: #f59e0b;
@@ -40,13 +40,13 @@ body {
    CAFE HERO HEADER & BRANDING
    ========================================== */
 .cafe-hero-header {
-    background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+    background: var(--bg-color);
     padding: 16px 20px 12px 20px;
-    border-bottom: 1px solid #fed7aa;
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 4px 12px -2px rgba(249, 115, 22, 0.08);
+    box-shadow: none;
 }
 
 .cafe-brand-row {
@@ -65,7 +65,7 @@ body {
 .cafe-logo-badge {
     width: 44px;
     height: 44px;
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -113,9 +113,9 @@ body {
     transition: all 0.2s;
 }
 .lang-btn.active {
-    background: #ea580c;
+    background: var(--primary-color);
     color: white;
-    box-shadow: 0 2px 4px rgba(234, 88, 12, 0.25);
+    box-shadow: 0 2px 4px rgba(97, 139, 44, 0.25);
 }
 
 .cafe-sub-bar {
@@ -204,8 +204,8 @@ body {
     font-family: inherit;
 }
 .menu-search-bar input:focus {
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(97, 139, 44, 0.12);
 }
 
 /* ==========================================
@@ -253,10 +253,10 @@ body {
     border-color: #cbd5e1;
 }
 .tab.active {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
     color: #ffffff;
-    border-color: #ea580c;
-    box-shadow: 0 4px 10px rgba(234, 88, 12, 0.28);
+    border-color: var(--primary-hover);
+    box-shadow: 0 4px 10px rgba(97, 139, 44, 0.28);
     transform: translateY(-1px);
 }
 
@@ -275,10 +275,10 @@ body {
     top: 0;
     left: 0;
     height: 100%;
-    background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-hover) 100%);
     border-radius: 4px;
     transition: transform 0.1s ease-out, width 0.2s ease;
-    box-shadow: 0 0 6px rgba(234, 88, 12, 0.5);
+    box-shadow: 0 0 6px rgba(97, 139, 44, 0.5);
 }
 
 .scroll-hint-bar {
@@ -311,26 +311,30 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #fed7aa;
+    background: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
 .menu-section h2 {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #1e293b;
+    color: white;
     margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .section-count-badge {
     font-size: 0.75rem;
     font-weight: 700;
-    background: #fff7ed;
-    color: #ea580c;
+    background: rgba(255,255,255,0.2);
+    color: white;
     padding: 3px 8px;
     border-radius: 12px;
-    border: 1px solid #ffedd5;
+    border: none;
 }
 
 .menu-item {

@@ -50,6 +50,9 @@ function initMenuTabs() {
                 if (targetSec) targetSec.classList.add('active');
             }
 
+            // Scroll to the top of the page smoothly so the new items are visible right below the sticky header
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             // Smoothly scroll clicked tab into the middle of the category bar
             if (tabsContainer) {
                 const tabOffsetLeft = tab.offsetLeft;

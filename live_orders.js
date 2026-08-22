@@ -1,18 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% block title %}Admin Panel{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=2.0">
-    <!-- Socket.IO ONLY FOR ADMIN PANEL (does not cause lag like customer facing side) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script>
-        function toggleDropdown(id) {
+function toggleDropdown(id) {
             document.getElementById(id).classList.toggle('active');
         }
         window.onclick = function(event) {
@@ -56,346 +42,7 @@
                 console.warn("Unauthorized access prohibited.");
             }
         });
-    </script>
-    {% block head %}{% endblock %}
-</head>
-<body>
-    <!-- Mobile Sidebar Backdrop Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
-
-    <!-- Sidebar Drawer -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="{{ url_for('static', filename='img/logo.png') }}?v=6.0" alt="Logo" style="height: 30px; border-radius: 4px;">
-                <h2>SOUL SIP CAFE</h2>
-            </div>
-            <button class="sidebar-close-btn" onclick="toggleSidebar(false)" title="Close Menu">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div class="sidebar-content">
-            <div class="nav-section">
-                <div class="nav-section-title">Operations</div>
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-grid-2"></i> Operations Hub</a>
-            </div>
-            
-            {% if current_user.role in ['admin', 'manager', 'waiter'] %}
-            <div class="nav-section">ORDERS & BILLING</div>
-            <a href="/admin/live_orders" class="nav-link {% if active_page == 'live_orders' %}active{% endif %}"><i class="fa-solid fa-bell-concierge"></i> Live Orders / KDS</a>
-            <a href="/admin/new_parcel" class="nav-link {% if active_page == 'new_parcel' %}active{% endif %}"><i class="fa-solid fa-box"></i> New Parcel Order</a>
-            <a href="/admin/live_tables" class="nav-link {% if active_page == 'live_tables' %}active{% endif %}"><i class="fa-solid fa-utensils"></i> Tables View</a>
-            <a href="/admin/tables" class="nav-link {% if active_page == 'tables' %}active{% endif %}"><i class="fa-solid fa-chair"></i> Tables Management</a>
-            {% endif %}
-            
-            {% if current_user.role in ['admin', 'manager', 'cashier'] %}
-            <div class="nav-section">FINANCIALS</div>
-            <a href="/admin/billing" class="nav-link {% if active_page == 'billing' %}active{% endif %}"><i class="fa-solid fa-file-invoice-dollar"></i> Billing Screen</a>
-            <a href="/admin/invoices" class="nav-link {% if active_page == 'invoices' %}active{% endif %}"><i class="fa-solid fa-receipt"></i> Invoices</a>
-            <a href="/admin/credit" class="nav-link {% if active_page == 'credit' %}active{% endif %}"><i class="fa-solid fa-book-open"></i> Due / Credit Ledger</a>
-            <a href="/admin/refunds" class="nav-link {% if active_page == 'refunds' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Refunds</a>
-            <a href="/admin/cashflow" class="nav-link {% if active_page == 'cashflow' %}active{% endif %}"><i class="fa-solid fa-money-bill-transfer"></i> Cash Flow</a>
-            <a href="/admin/expenses" class="nav-link {% if active_page == 'expenses' %}active{% endif %}"><i class="fa-solid fa-hand-holding-dollar"></i> Expenses</a>
-            <a href="/admin/day_end" class="nav-link {% if active_page == 'day_end' %}active{% endif %}"><i class="fa-solid fa-lock"></i> Day End Close</a>
-            {% endif %}
-            
-            {% if current_user.role in ['admin', 'manager'] %}
-            <div class="nav-section">MENU & INVENTORY</div>
-            <a href="/admin/categories" class="nav-link {% if active_page == 'categories' %}active{% endif %}"><i class="fa-solid fa-list"></i> Categories</a>
-            <a href="/admin/items" class="nav-link {% if active_page == 'items' %}active{% endif %}"><i class="fa-solid fa-burger"></i> Menu Items</a>
-            <a href="javascript:void(0)" onclick="openItemOnOffModal()" class="nav-link"><i class="fa-solid fa-toggle-on"></i> Item Quick On/Off</a>
-            <a href="/admin/inventory" class="nav-link {% if active_page == 'inventory' %}active{% endif %}"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
-            <a href="{{ url_for('admin_customers') }}" class="nav-link {% if active_page == 'customers' %}active{% endif %}"><i class="fa-solid fa-users"></i> Customers (CRM)</a>
-            <a href="{{ url_for('admin_coupons') }}" class="nav-link {% if active_page == 'coupons' %}active{% endif %}"><i class="fa-solid fa-ticket"></i> Discounts & Coupons</a>
-            <a href="{{ url_for('admin_feedback') }}" class="nav-link {% if active_page == 'feedback' %}active{% endif %}"><i class="fa-solid fa-star"></i> Feedback</a>
-            
-            <div class="nav-section">REPORTS</div>
-            <a href="/admin/reports" class="nav-link {% if active_page == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Analytics & Reports</a>
-            {% endif %}
-            
-            {% if current_user.role == 'admin' %}
-            <div class="nav-section">SETTINGS</div>
-            <a href="/admin/settings/outlet" class="nav-link {% if active_page == 'outlet_settings' %}active{% endif %}"><i class="fa-solid fa-sliders"></i> Outlet Settings</a>
-            <a href="/admin/staff" class="nav-link {% if active_page == 'staff' %}active{% endif %}"><i class="fa-solid fa-user-tie"></i> Staff / User Profiles</a>
-            <a href="/admin/activity_log" class="nav-link {% if active_page == 'activity_log' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</a>
-            {% endif %}
-            
-            {% if current_user.role == 'delivery' %}
-            <div class="nav-section">DELIVERY</div>
-            <a href="{{ url_for('my_deliveries') }}" class="nav-link {% if active_page == 'my_deliveries' %}active{% endif %}"><i class="fa-solid fa-motorcycle"></i> My Deliveries</a>
-            {% endif %}
-            
-            {% if current_user.role in ['admin', 'manager', 'chef'] %}
-            <div class="nav-section">KITCHEN</div>
-            <a href="/kitchen" class="nav-link" target="_blank"><i class="fa-solid fa-fire-burner"></i> Open KDS ↗</a>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-area">
-        <!-- PETPOOJA TOPBAR -->
-        <div class="petpooja-topbar">
-            <div class="petpooja-left">
-                <button class="mobile-menu-btn" onclick="toggleSidebar()" style="background:none; border:none; color:#334155; font-size:1.1rem; cursor:pointer; display:none;">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <div class="pos-brand-logo" style="background: none; padding: 0;">
-                    <img src="{{ url_for('static', filename='img/logo.png') }}?v=6.0" alt="Logo" style="height: 28px; border-radius: 4px;">
-                </div>
-                <div class="brand-outlet-title" title="Soul Sip Cafe">
-                    Soul Sip Cafe (R393522)
-                </div>
-                <button class="btn-new-order-red" onclick="openNewOrderModal()">
-                    <i class="fa-solid fa-plus"></i> New Order
-                </button>
-                <div class="topbar-search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="topBillSearchInput" placeholder="Q Bill No" onkeydown="handleTopBillSearch(event)">
-                </div>
-                <div class="topbar-search-box">
-                    <i class="fa-solid fa-receipt"></i>
-                    <input type="text" id="topKotSearchInput" placeholder="Q KOT No." onkeydown="handleTopKotSearch(event)">
-                </div>
-            </div>
-
-            <div class="petpooja-right-tools">
-                <button class="petpooja-tool-item" onclick="openItemOnOffModal()" title="Item Quick On/Off">
-                    <i class="fa-solid fa-toggle-on"></i>
-                    <span>Item On/Off</span>
-                </button>
-                <a href="/admin/live_tables" class="petpooja-tool-item" title="Store / Tables">
-                    <i class="fa-solid fa-store"></i>
-                    <span>Store</span>
-                </a>
-                <a href="/admin/live_orders" class="petpooja-tool-item" title="Live KDS View">
-                    <i class="fa-solid fa-tower-broadcast"></i>
-                    <span>Live View</span>
-                </a>
-                <a href="/admin/invoices" class="petpooja-tool-item" title="Orders History">
-                    <i class="fa-solid fa-file-invoice"></i>
-                    <span>Orders</span>
-                </a>
-                <button class="petpooja-tool-item" onclick="openRecentInvoicesModal()" title="Recent Bills">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>Recent</span>
-                </button>
-                <button class="petpooja-tool-item" onclick="openHoldOrdersModal()" title="Hold Orders">
-                    <i class="fa-solid fa-pause"></i>
-                    <span>Hold</span>
-                </button>
-                <button class="petpooja-tool-item" id="waiterCallsTopBtn" onclick="openWaiterCallsModal()" title="Waiter Calls" style="position:relative;">
-                    <i class="fa-solid fa-bell-concierge" id="waiterCallsIcon" style="color: #f59e0b;"></i>
-                    <span>Calls</span>
-                    <span id="waiterCallsToolBadge" class="tool-badge" style="background:#ef4444; color:#fff; display:none; font-weight:800;">0</span>
-                </button>
-                <button class="petpooja-tool-item" onclick="openAlertsModal()" title="Alerts" style="position:relative;">
-                    <i class="fa-regular fa-bell"></i>
-                    <span>Alerts</span>
-                    <span id="alertsToolBadge" class="tool-badge" style="{% if low_stock_items|length == 0 %}display:none;{% endif %}">{{ low_stock_items|length }}</span>
-                </button>
-                <a href="{{ url_for('admin_logout') }}" class="petpooja-tool-item" title="Logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket" style="color:#ef4444;"></i>
-                    <span style="color:#ef4444;">Logout</span>
-                </a>
-            </div>
-        </div>
-
-        <div class="content-wrapper">
-            {% if dummy %}
-                <div style="padding: 40px; text-align: center; color: var(--text-secondary); background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
-                    <h2>Coming Soon</h2>
-                    <p style="margin-top: 10px;">This page will be implemented in a future phase.</p>
-                </div>
-            {% else %}
-                {% block content %}{% endblock %}
-            {% endif %}
-        </div>
-        
-        <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: auto; padding: 12px 0;">
-            &copy; 2026 Soul Sip Cafe &bull; Radha Pos system
-        </div>
-    </div>
-
-    <!-- MODAL: NEW ORDER -->
-    <div class="pos-modal-overlay" id="newOrderModal">
-        <div class="pos-modal-container" style="max-width: 500px;">
-            <div class="pos-modal-header">
-                <h3><i class="fa-solid fa-plus-circle" style="color:#dc2626;"></i> Create New Order</h3>
-                <button class="pos-modal-close" onclick="closeModal('newOrderModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body">
-                <p style="font-size:0.9rem; color:#64748b; margin-bottom:18px;">Select the type of order you want to create:</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-                    <a href="/admin/live_tables" style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:18px 12px; text-align:center; text-decoration:none; color:#1e293b; display:flex; flex-direction:column; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-utensils" style="font-size:1.8rem; color:#dc2626;"></i>
-                        <span style="font-weight:700; font-size:0.9rem;">Dine-In</span>
-                        <span style="font-size:0.75rem; color:#64748b;">Pick Table</span>
-                    </a>
-                    <a href="/admin/new_parcel" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:18px 12px; text-align:center; text-decoration:none; color:#1e293b; display:flex; flex-direction:column; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-box" style="font-size:1.8rem; color:#16a34a;"></i>
-                        <span style="font-weight:700; font-size:0.9rem;">Parcel</span>
-                        <span style="font-size:0.75rem; color:#64748b;">Takeaway</span>
-                    </a>
-                    <a href="/admin/new_parcel" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:18px 12px; text-align:center; text-decoration:none; color:#1e293b; display:flex; flex-direction:column; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-motorcycle" style="font-size:1.8rem; color:#2563eb;"></i>
-                        <span style="font-weight:700; font-size:0.9rem;">Delivery</span>
-                        <span style="font-size:0.75rem; color:#64748b;">Home Delivery</span>
-                    </a>
-                </div>
-            </div>
-            <div class="pos-modal-footer">
-                <button class="btn-primary" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;" onclick="closeModal('newOrderModal')">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: QUICK BILL LOOKUP -->
-    <div class="pos-modal-overlay" id="billSearchModal">
-        <div class="pos-modal-container">
-            <div class="pos-modal-header">
-                <h3><i class="fa-solid fa-magnifying-glass" style="color:#2563eb;"></i> Bill / Invoice Lookup</h3>
-                <button class="pos-modal-close" onclick="closeModal('billSearchModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body">
-                <div style="display:flex; gap:10px; margin-bottom:16px;">
-                    <input type="text" id="modalBillQueryInput" placeholder="Enter Bill / Invoice Number (e.g. MB-00001)..." style="flex:1; padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.95rem;">
-                    <button class="btn-primary" onclick="performBillSearch()"><i class="fa-solid fa-search"></i> Search</button>
-                </div>
-                <div id="billSearchResults" style="min-height:120px;">
-                    <p style="color:#94a3b8; text-align:center; padding:30px 0;">Search results will appear here.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: QUICK KOT LOOKUP -->
-    <div class="pos-modal-overlay" id="kotSearchModal">
-        <div class="pos-modal-container">
-            <div class="pos-modal-header">
-                <h3><i class="fa-solid fa-receipt" style="color:#ea580c;"></i> KOT Ticket Lookup</h3>
-                <button class="pos-modal-close" onclick="closeModal('kotSearchModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body">
-                <div style="display:flex; gap:10px; margin-bottom:16px;">
-                    <input type="text" id="modalKotQueryInput" placeholder="Enter KOT Number or Table Name..." style="flex:1; padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.95rem;">
-                    <button class="btn-primary" onclick="performKotSearch()"><i class="fa-solid fa-search"></i> Search</button>
-                </div>
-                <div id="kotSearchResults" style="min-height:120px;">
-                    <p style="color:#94a3b8; text-align:center; padding:30px 0;">Search results will appear here.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: ITEM QUICK ON/OFF -->
-    <div class="pos-modal-overlay" id="itemOnOffModal">
-        <div class="pos-modal-container" style="max-width:750px;">
-            <div class="pos-modal-header">
-                <h3><i class="fa-solid fa-toggle-on" style="color:#16a34a;"></i> Menu Item Quick On / Off</h3>
-                <button class="pos-modal-close" onclick="closeModal('itemOnOffModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body">
-                <input type="text" id="itemFilterInput" placeholder="Type to filter menu items..." onkeyup="filterModalItems()" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem; margin-bottom:16px;">
-                <div style="max-height:400px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
-                    <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;" id="itemOnOffTable">
-                        <thead style="background:#f8fafc; position:sticky; top:0; border-bottom:1px solid #e2e8f0;">
-                            <tr>
-                                <th style="padding:10px 14px;">Item Name</th>
-                                <th style="padding:10px 14px;">Category</th>
-                                <th style="padding:10px 14px;">Price</th>
-                                <th style="padding:10px 14px; text-align:center;">Status</th>
-                                <th style="padding:10px 14px; text-align:center;">Toggle</th>
-                            </tr>
-                        </thead>
-                        <tbody id="itemOnOffTableBody">
-                            <tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">Loading menu items...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="pos-modal-footer">
-                <button class="btn-primary" onclick="closeModal('itemOnOffModal')">Done</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: RECENT INVOICES -->
-    <div class="pos-modal-overlay" id="recentInvoicesModal">
-        <div class="pos-modal-container">
-            <div class="pos-modal-header">
-                <h3><i class="fa-solid fa-clock-rotate-left" style="color:#6366f1;"></i> Recent Settled Invoices</h3>
-                <button class="pos-modal-close" onclick="closeModal('recentInvoicesModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body" id="recentInvoicesBody">
-                <p style="text-align:center; color:#94a3b8; padding:30px;">Loading recent invoices...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: HOLD ORDERS -->
-    <div class="pos-modal-overlay" id="holdOrdersModal">
-        <div class="pos-modal-container">
-            <div class="pos-modal-header">
-                <h3><i class="fa-solid fa-pause" style="color:#eab308;"></i> Held / Active Table Orders</h3>
-                <button class="pos-modal-close" onclick="closeModal('holdOrdersModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body" id="holdOrdersBody">
-                <p style="text-align:center; color:#94a3b8; padding:30px;">Loading held orders...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: ALERTS -->
-    <div class="pos-modal-overlay" id="alertsModal">
-        <div class="pos-modal-container">
-            <div class="pos-modal-header">
-                <h3><i class="fa-regular fa-bell" style="color:#ef4444;"></i> Restaurant Alerts</h3>
-                <button class="pos-modal-close" onclick="closeModal('alertsModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body" id="alertsModalBody">
-                {% if low_stock_items|length > 0 %}
-                <h4 style="font-size:0.9rem; color:#dc2626; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock Alerts</h4>
-                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                    {% for itm in low_stock_items %}
-                    <div style="background:#fef2f2; border:1px solid #fecaca; padding:10px 14px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong>{{ itm.name }}</strong>
-                            <div style="font-size:0.78rem; color:#64748b;">Current: <span style="color:#dc2626; font-weight:700;">{{ itm.current_stock }} {{ itm.unit }}</span> (Threshold: {{ itm.low_stock_threshold }})</div>
-                        </div>
-                        <a href="/admin/inventory" class="btn-primary" style="padding:4px 10px; font-size:0.78rem; text-decoration:none;">Restock</a>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p style="text-align:center; color:#16a34a; padding:20px 0;"><i class="fa-solid fa-circle-check"></i> No inventory alerts. All stock is optimal.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: ACTIVE WAITER CALLS -->
-    <div class="pos-modal-overlay" id="waiterCallsModal">
-        <div class="pos-modal-container" style="max-width: 480px;">
-            <div class="pos-modal-header" style="background:#fef2f2; border-bottom:1px solid #fee2e2;">
-                <h3 style="color:#991b1b;"><i class="fa-solid fa-bell-concierge" style="color:#ef4444;"></i> Table Assistance / Waiter Calls</h3>
-                <button class="pos-modal-close" onclick="closeModal('waiterCallsModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="pos-modal-body" id="waiterCallsModalBody" style="max-height:360px; overflow-y:auto; padding:16px;">
-                <p style="text-align:center; color:#94a3b8; padding:25px;">Loading active calls...</p>
-            </div>
-            <div class="pos-modal-footer">
-                <button class="btn-primary" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;" onclick="closeModal('waiterCallsModal')">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Global Floating Waiter Call Container -->
-    <div id="globalWaiterCallContainer" style="position:fixed;  right:24px; z-index:9999999; display:flex; flex-direction:column; gap:12px; max-width:340px; pointer-events:none;"></div>
-
-    <!-- SOUL SIP POS SCRIPTS -->
-    <script>
-        function openModal(id) {
+function openModal(id) {
             document.getElementById(id).classList.add('active');
         }
         function closeModal(id) {
@@ -878,36 +525,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadPendingWaiterCalls();
         });
-    </script>
-
-    <!-- MOBILE OWNER BOTTOM APP NAVIGATION BAR -->
-    <nav class="mobile-bottom-nav">
-        <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-tab {% if active_page == 'dashboard' %}active{% endif %}">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Hub</span>
-        </a>
-        <a href="/admin/live_tables" class="mobile-nav-tab {% if active_page == 'live_tables' %}active{% endif %}">
-            <i class="fa-solid fa-utensils"></i>
-            <span>Tables</span>
-        </a>
-        <a href="javascript:void(0)" onclick="openNewOrderModal()" class="mobile-nav-tab mobile-nav-center-btn" title="New Order">
-            <div class="mobile-center-circle">
-                <i class="fa-solid fa-plus"></i>
-            </div>
-            <span>New Order</span>
-        </a>
-        <a href="/admin/live_orders" class="mobile-nav-tab {% if active_page == 'live_orders' %}active{% endif %}">
-            <i class="fa-solid fa-tower-broadcast"></i>
-            <span>Live KDS</span>
-        </a>
-        <a href="javascript:void(0)" onclick="toggleSidebar(true)" class="mobile-nav-tab">
-            <i class="fa-solid fa-bars"></i>
-            <span>Menu</span>
-        </a>
-    </nav>
-
-    <script>
-        // Make all tables responsive on mobile by wrapping them in a scrollable div
+// Make all tables responsive on mobile by wrapping them in a scrollable div
         document.addEventListener('DOMContentLoaded', function() {
             const tables = document.querySelectorAll('table:not(.no-responsive)');
             tables.forEach(table => {
@@ -920,14 +538,556 @@
                 }
             });
         });
-    </script>
-{% block scripts %}{% endblock %}
-    {% block modals %}{% endblock %}
-</body>
-</html>
+var socket = window.socket || (typeof io !== 'undefined' ? io() : null);
+    
+    let currentSettleOrder = null;
+    let currentSettleOrderId = null;
+    let currentSettleOrderTotal = 0;
+    let currentSettleCoupon = '';
+    let currentSettleMobile = '';
+    let currentAvailablePoints = 0;
+    
+    // Discount variables
+    let appliedDiscountType = null;
+    let appliedDiscountValue = 0;
+    let appliedDiscountReason = '';
+    let orderItemsMap = {}; // orderId -> items
 
+    // Fix for mobile devices: when screen wakes up or tab becomes visible, reload to fetch missed real-time events
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            window.location.reload();
+        }
+    });
 
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
 
+    async function openSettleModal(orderId, type, customerName, customerMobile, totalStr, coupon) {
+        currentSettleOrderId = orderId;
+        currentSettleOrderTotal = parseFloat(totalStr);
+        currentSettleCoupon = coupon || '';
+        currentSettleMobile = customerMobile || '';
+        
+        appliedDiscountType = null;
+        appliedDiscountValue = 0;
+        appliedDiscountReason = '';
+        
+        document.getElementById('settle-order-title').innerText = `Order #${orderId}`;
+        document.getElementById('settle-total-display').innerText = currentSettleOrderTotal.toFixed(2);
+        
+        document.getElementById('settle-amount').value = currentSettleOrderTotal.toFixed(2);
+        document.getElementById('settle-customer-paid').value = '';
+        document.getElementById('settle-return-display').innerText = '₹0';
+        document.getElementById('settle-return-display').style.color = 'var(--text-color)';
+        document.getElementById('settle-coupon').value = '';
+        document.getElementById('settle-redeem-points').value = '';
+        document.getElementById('settle-loyalty-section').style.display = 'none';
 
+        if (currentSettleMobile) {
+            try {
+                const resp = await fetch('/api/customer/history?mobile=' + encodeURIComponent(currentSettleMobile));
+                const data = await resp.json();
+                if (data.success && data.loyalty_points > 0) {
+                    currentAvailablePoints = data.loyalty_points;
+                    document.getElementById('settle-available-points').innerText = data.loyalty_points;
+                    document.getElementById('settle-redeem-points').max = data.loyalty_points;
+                    document.getElementById('settle-loyalty-section').style.display = 'block';
+                }
+            } catch(e) { console.error('Error fetching loyalty points:', e); }
+        }
+        
+        document.getElementById('settle-modal').classList.add('active');
+    }
+    
+    function togglePaymentMethod() {
+        const method = document.querySelector('input[name="payment-method"]:checked').value;
+        const wrapper = document.getElementById('other-payment-wrapper');
+        if (method === 'other') {
+            wrapper.style.display = 'block';
+        } else {
+            wrapper.style.display = 'none';
+        }
+    }
+    
+    function calculateSettleChange() {
+        const paidStr = document.getElementById('settle-customer-paid').value;
+        const total = parseFloat(document.getElementById('settle-amount').value) || 0;
+        const display = document.getElementById('settle-return-display');
+        
+        if (!paidStr) {
+            display.innerText = '₹0';
+            display.style.color = 'var(--text-color)';
+            return;
+        }
+        
+        const paid = parseFloat(paidStr);
+        const diff = paid - total;
+        
+        if (diff < 0) {
+            display.innerText = 'Less Amt.';
+            display.style.color = '#dc2626'; // red
+        } else {
+            display.innerText = 'Return: ₹' + diff.toFixed(2);
+            display.style.color = '#10b981'; // green
+        }
+    }
 
+    function openDiscountModal() {
+        document.getElementById('discount-modal').classList.add('active');
+    }
+    
+    function saveDiscount() {
+        const dReason = document.getElementById('discount-reason').value;
+        const dType = document.querySelector('input[name="discount-type"]:checked').value;
+        const dValue = parseFloat(document.getElementById('discount-value').value) || 0;
+        
+        if (dValue > 0) {
+            appliedDiscountType = dType;
+            appliedDiscountValue = dValue;
+            appliedDiscountReason = dReason;
+            
+            let discountAmount = 0;
+            // Reverse engineering subtotal from total: (total / 1.05)
+            const subtotal = currentSettleOrderTotal / 1.05;
+            if (dType === 'percent') {
+                discountAmount = subtotal * (dValue / 100);
+            } else {
+                discountAmount = dValue;
+            }
+            
+            const newSubtotal = subtotal - discountAmount;
+            const newTotal = (newSubtotal * 1.05).toFixed(2);
+            
+            document.getElementById('settle-amount').value = newTotal;
+            document.getElementById('settle-total-display').innerText = newTotal + " (Discounted)";
+        }
+        
+        closeModal('discount-modal');
+    }
 
+    function applyPointsDiscount() {
+        const redeemInput = document.getElementById('settle-redeem-points').value;
+        const pts = parseInt(redeemInput);
+        if (!pts || pts <= 0) return;
+        
+        if (pts > currentAvailablePoints) {
+            alert('Cannot redeem more points than available!');
+            document.getElementById('settle-redeem-points').value = currentAvailablePoints;
+            return;
+        }
+
+        // Each point is Rs. 1 off (GST applies after discount)
+        const subtotal = currentSettleOrderTotal / 1.05; 
+        if (pts > subtotal) {
+            alert('Discount cannot exceed the order subtotal!');
+            return;
+        }
+
+        // Apply discount logic
+        const discountAmt = pts;
+        const newTotal = ((subtotal - discountAmt) * 1.05).toFixed(2);
+        
+        appliedDiscountType = 'loyalty';
+        appliedDiscountValue = pts;
+        appliedDiscountReason = `Redeemed ${pts} points`;
+
+        document.getElementById('settle-amount').value = newTotal;
+        document.getElementById('settle-total-display').innerText = newTotal + " (Points Redeemed)";
+        calculateSettleChange();
+        closeModal('discount-modal');
+    }
+
+    let currentSplitType = 'portion';
+    let splitItemCounter = 0;
+    
+    function switchSplitTab(tab) {
+        document.querySelectorAll('.split-tab').forEach(t => {
+            t.classList.remove('active');
+            t.style.color = 'var(--text-secondary)';
+            t.style.borderBottom = 'none';
+        });
+        document.querySelectorAll('.split-content-pane').forEach(p => p.style.display = 'none');
+        
+        const selected = document.getElementById(`tab-${tab}`);
+        selected.classList.add('active');
+        selected.style.color = 'var(--brand-orange)';
+        selected.style.borderBottom = '3px solid var(--brand-orange)';
+        
+        document.getElementById(`split-content-${tab}`).style.display = 'block';
+        currentSplitType = tab;
+    }
+    
+    async function openSplitModal() {
+        document.getElementById('split-modal').classList.add('active');
+        try {
+            const resp = await fetch(`/api/order_details/${currentSettleOrderId}`);
+            const data = await resp.json();
+            if (data.success) {
+                renderSplitItems(data.items);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    function renderSplitItems(items) {
+        const list = document.getElementById('split-item-list');
+        list.innerHTML = '';
+        items.forEach((item, idx) => {
+            for(let i=0; i<item.quantity; i++) {
+                splitItemCounter++;
+                list.innerHTML += `
+                    <div class="split-item-row" data-id="${splitItemCounter}" data-menuid="${item.menu_item_id}" data-price="${item.price}" style="display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border-color);">
+                        <input type="checkbox" class="split-item-chk" value="${splitItemCounter}">
+                        <span>${item.name}</span>
+                        <span style="margin-left:auto;">₹${item.price}</span>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    function toggleAllSplitItems() {
+        const checked = document.getElementById('split-all-items').checked;
+        document.querySelectorAll('.split-item-chk').forEach(c => c.checked = checked);
+    }
+    
+    function assignItemsToPart(partNumber) {
+        const checked = document.querySelectorAll('#split-item-list .split-item-chk:checked');
+        const partBox = document.getElementById(`part-items-${partNumber}`);
+        
+        checked.forEach(chk => {
+            const row = chk.closest('.split-item-row');
+            chk.checked = false;
+            chk.style.display = 'none';
+            partBox.appendChild(row);
+        });
+    }
+    
+    function addSplitPart() {
+        const container = document.getElementById('split-parts-container');
+        const currentParts = container.querySelectorAll('.split-part-box').length;
+        const newPart = currentParts + 1;
+        
+        const div = document.createElement('div');
+        div.className = 'split-part-box';
+        div.dataset.part = newPart;
+        div.style = "border:1px solid var(--border-color); border-radius:6px;";
+        div.innerHTML = `
+            <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
+                Part ${newPart} <button class="btn-secondary" style="padding:2px 8px; font-size:0.8rem; color:#dc2626; background:white;" onclick="assignItemsToPart(${newPart})">Add</button>
+            </div>
+            <div class="part-items" id="part-items-${newPart}" style="padding:10px; min-height:50px; font-size:0.9rem;"></div>
+        `;
+        container.appendChild(div);
+    }
+
+    function submitSplit() {
+        const payload = {
+            order_id: currentSettleOrderId,
+            split_type: currentSplitType,
+        };
+        
+        if (currentSplitType === 'portion') {
+            payload.split_ways = parseInt(document.getElementById('split-ways').value);
+        } else if (currentSplitType === 'percentage') {
+            payload.percentages = [
+                parseInt(document.getElementById('split-percentage-1').value),
+                parseInt(document.getElementById('split-percentage-2').value)
+            ];
+        } else if (currentSplitType === 'item') {
+            const parts = [];
+            document.querySelectorAll('.split-part-box').forEach(box => {
+                const partNum = box.dataset.part;
+                const items = [];
+                box.querySelectorAll('.split-item-row').forEach(row => {
+                    items.push({
+                        menu_item_id: parseInt(row.dataset.menuid),
+                        price: parseFloat(row.dataset.price)
+                    });
+                });
+                if (items.length > 0) parts.push({ part: partNum, items: items });
+            });
+            payload.item_parts = parts;
+        }
+        
+        fetch('/api/split_bill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': 'IjBhMmFmM2RmMjAwNzFjMDgxMjQ2ZmQ1MDFhOTViZmJkY2FhODA3OGMi.aofBeA.T14rSRliXrk07HXNeSg1hop6nxI'},
+            body: JSON.stringify(payload)
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error splitting bill');
+            }
+        });
+    }
+
+    function submitSettle() {
+        const method = document.querySelector('input[name="payment-method"]:checked').value;
+        const otherMethod = document.getElementById('other-payment-type').value;
+        const paymentNote = document.getElementById('payment-note').value;
+        const customerPaid = parseFloat(document.getElementById('settle-customer-paid').value) || 0;
+        const tipAmount = parseFloat(document.getElementById('settle-tip').value) || 0;
+        const coupon = document.getElementById('settle-coupon').value;
+        const redeemedPoints = (appliedDiscountType === 'loyalty') ? appliedDiscountValue : 0;
+        const delivery = document.getElementById('settle-delivery') ? document.getElementById('settle-delivery').value : 0;
+        
+        // Calculate change for DB
+        const total = parseFloat(document.getElementById('settle-amount').value) || 0;
+        let change = 0;
+        if (customerPaid > total) {
+            change = customerPaid - total;
+        }
+        
+        let payload = {
+            order_ids: [currentSettleOrderId],
+            payment_method: method,
+            custom_payment_method: method === 'other' ? otherMethod : null,
+            payment_note: paymentNote,
+            customer_paid: customerPaid,
+            change_returned: change,
+            tip_amount: tipAmount,
+            coupon_code: coupon,
+            redeemed_points: redeemedPoints,
+            delivery_charge: delivery,
+            discount_type: appliedDiscountType,
+            discount_value: appliedDiscountValue,
+            discount_reason: appliedDiscountReason
+        };
+        
+        fetch('/api/settle_bill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': 'IjBhMmFmM2RmMjAwNzFjMDgxMjQ2ZmQ1MDFhOTViZmJkY2FhODA3OGMi.aofBeA.T14rSRliXrk07HXNeSg1hop6nxI'},
+            body: JSON.stringify(payload)
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error settling bill');
+            }
+        });
+    }
+
+    // Unlock audio on first user interaction to bypass browser autoplay policies
+    let audioUnlocked = false;
+    document.body.addEventListener('click', () => {
+        if (!audioUnlocked) {
+            const audio = document.getElementById('notif-sound');
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audioUnlocked = true;
+                }).catch(err => console.log('Audio unlock failed', err));
+            }
+        }
+    });
+    
+    function resolveCall(callId) {
+        fetch(`/api/resolve_call/${callId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : ''}
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                const el = document.getElementById(`waiter-call-${callId}`);
+                if (el) el.remove();
+            }
+        });
+    }
+
+    let lastUpdateCheck = Date.now() / 1000;
+    
+    // Check if we need to play a sound from a previous reload
+    if (localStorage.getItem('play_update_sound') === 'true') {
+        localStorage.removeItem('play_update_sound');
+        if (document.getElementById('sound-toggle').checked) {
+            const audio = document.getElementById('notif-sound');
+            if (audio) {
+                let playCount = 0;
+                function playBeep() {
+                    if (playCount < 3) {
+                        audio.play().catch(e => console.log('Audio play failed:', e));
+                    }
+                }
+                audio.onended = () => {
+                    playCount++;
+                    if (playCount < 3) {
+                        setTimeout(playBeep, 500);
+                    }
+                };
+                playBeep();
+            }
+        }
+    }
+    
+    setInterval(async () => {
+        // If a modal is open (e.g. settling bill), delay the update so we don't interrupt the user
+        if (document.querySelector('.modal.active')) return;
+        
+        try {
+            const resp = await fetch(`/api/check_updates?since=${lastUpdateCheck}`);
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.has_updates) {
+                    localStorage.setItem('play_update_sound', 'true');
+                    try {
+                        const htmlResp = await fetch(window.location.href);
+                        const htmlText = await htmlResp.text();
+                        const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+                        document.querySelector('.kanban-board').innerHTML = doc.querySelector('.kanban-board').innerHTML;
+                        updateCounts();
+                        lastUpdateCheck = data.timestamp;
+                    } catch(e) { window.location.reload(); }
+                }
+            }
+        } catch (e) {
+            console.error("Polling error", e);
+        }
+    }, 10000);
+
+    // Drag and Drop Logic
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text/plain", ev.target.dataset.id);
+        ev.target.classList.add('dragging');
+    }
+
+    document.addEventListener('dragend', (ev) => {
+        if(ev.target.classList) ev.target.classList.remove('dragging');
+    });
+
+    function drop(ev, newStatus) {
+        ev.preventDefault();
+        const orderId = ev.dataTransfer.getData("text/plain");
+        const draggedEl = document.querySelector(`.order-card[data-id="${orderId}"]`);
+        
+        // Find the closest column body
+        let dropTarget = ev.target.closest('.kanban-column').querySelector('.column-body');
+        
+        if (draggedEl && dropTarget && draggedEl.parentElement !== dropTarget) {
+            dropTarget.appendChild(draggedEl);
+            updateStatusAPI(orderId, newStatus);
+            updateCardButtons(draggedEl, newStatus);
+        }
+    }
+    
+    // Button Logic
+    function updateStatus(orderId, newStatus) {
+        try {
+            const card = document.querySelector(`.order-card[data-id="${orderId}"]`);
+            const targetList = document.getElementById(`list-${newStatus}`);
+            if (card && targetList) {
+                targetList.appendChild(card);
+                updateStatusAPI(orderId, newStatus);
+                updateCardButtons(card, newStatus);
+            } else {
+                alert('DOM Error: Cannot find card or target list');
+            }
+        } catch(e) {
+            alert('JS Error: ' + e);
+        }
+    }
+    }
+    
+    function updateCardButtons(card, status) {
+        const actionDiv = card.querySelector('.status-btn-container');
+        if (!actionDiv) return;
+        if (status === 'new') {
+            actionDiv.innerHTML = `<button class="btn-status" style="flex:1;" onclick="updateStatus(${card.dataset.id}, 'preparing')">Start Preparing</button>`;
+        } else if (status === 'preparing') {
+            actionDiv.innerHTML = `<button class="btn-status" style="flex:1;" onclick="updateStatus(${card.dataset.id}, 'served')">Mark Served</button>`;
+        } else if (status === 'served') {
+            actionDiv.innerHTML = `<button class="btn-status" style="flex:1;" onclick="updateStatus(${card.dataset.id}, 'completed')">Complete</button>`;
+        } else {
+            actionDiv.innerHTML = '';
+        }
+        updateCounts();
+    }
+    
+    async function updateStatusAPI(orderId, status) {
+        try {
+            await fetch('/api/update_order_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
+                body: JSON.stringify({ order_id: orderId, status: status })
+            });
+        } catch (err) {
+            console.error("Failed to update status", err);
+            alert("Error updating order status!");
+        }
+    }
+    
+    function updateCounts() {
+        document.getElementById('count-new').innerText = document.querySelectorAll('#list-new .order-card').length;
+        document.getElementById('count-preparing').innerText = document.querySelectorAll('#list-preparing .order-card').length;
+        document.getElementById('count-served').innerText = document.querySelectorAll('#list-served .order-card').length;
+        document.getElementById('count-completed').innerText = document.querySelectorAll('#list-completed .order-card').length;
+    }
+    
+    // Filtering logic
+    function applyFilters() {
+        const typeFilter = document.getElementById('filter-type').value;
+        const branchFilter = document.getElementById('filter-branch').value;
+        
+        document.querySelectorAll('.order-card').forEach(card => {
+            const cardType = card.dataset.type;
+            const cardBranch = card.dataset.branch;
+            
+            let matchType = (typeFilter === 'all' || cardType === typeFilter);
+            let matchBranch = (branchFilter === 'all' || cardBranch === branchFilter);
+            
+            if (matchType && matchBranch) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        // We do not update counts on filter to show true counts, or we could if requested.
+    }
+    
+    function clearFilters() {
+        document.getElementById('filter-type').value = 'all';
+        document.getElementById('filter-branch').value = 'all';
+        applyFilters();
+    }
+
+    // Dynamic timer for Kitchen Display System (KDS)
+    function updateOrderTimers() {
+        document.querySelectorAll('.order-elapsed').forEach(timer => {
+            const timeStr = timer.getAttribute('data-time');
+            if (timeStr) {
+                // Parse timestamp directly
+                const orderTime = parseFloat(timeStr);
+                const now = new Date().getTime();
+                const diffMins = Math.floor(Math.max(0, now - orderTime) / 60000);
+                
+                timer.innerText = diffMins + 'm ago';
+                
+                // Color coding
+                if (diffMins >= 20) {
+                    timer.style.background = '#fef2f2'; // light red
+                    timer.style.color = '#dc2626'; // dark red
+                } else if (diffMins >= 10) {
+                    timer.style.background = '#fffbeb'; // light orange
+                    timer.style.color = '#d97706'; // dark orange
+                } else {
+                    timer.style.background = '#f0fdf4'; // light green
+                    timer.style.color = '#16a34a'; // dark green
+                }
+            }
+        });
+    }
+    
+    // Initial run and then every 30 seconds
+    updateOrderTimers();
+    setInterval(updateOrderTimers, 30000);

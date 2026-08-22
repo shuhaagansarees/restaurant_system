@@ -1554,7 +1554,7 @@ def settle_bill():
     if discount > subtotal: discount = subtotal
     
     taxable = subtotal - discount + delivery_charge
-    gst_amount = taxable * 0.05
+    gst_amount = taxable * 0.0
     exact_total = taxable + gst_amount
     rounded_total = round(exact_total)
     round_off = rounded_total - exact_total
@@ -1564,7 +1564,7 @@ def settle_bill():
         invoice_number=f"INV-{main_order.id}-{datetime.utcnow().strftime('%H%M%S')}",
         subtotal=subtotal,
         discount=discount,
-        gst_percent=5.0,
+        gst_percent=0.0,
         gst_amount=gst_amount,
         round_off=round_off,
         delivery_charge=delivery_charge,
@@ -2773,7 +2773,7 @@ def split_bill():
             if discount > total_subtotal: discount = total_subtotal
                 
     total_taxable = total_subtotal - discount + order.delivery_charge
-    total_gst = total_taxable * 0.05
+    total_gst = total_taxable * 0.0
     exact_grand_total = total_taxable + total_gst
     
     invoices = []
@@ -2787,7 +2787,7 @@ def split_bill():
                 invoice_number=f"INV-{order.id}-P{i+1}-{datetime.utcnow().strftime('%H%M%S')}",
                 subtotal=total_subtotal / split_ways,
                 discount=discount / split_ways,
-                gst_percent=5.0,
+                gst_percent=0.0,
                 gst_amount=total_gst / split_ways,
                 round_off=0.0,
                 delivery_charge=order.delivery_charge / split_ways,
@@ -2808,7 +2808,7 @@ def split_bill():
                 invoice_number=f"INV-{order.id}-Pct{i+1}-{datetime.utcnow().strftime('%H%M%S')}",
                 subtotal=total_subtotal * ratio,
                 discount=discount * ratio,
-                gst_percent=5.0,
+                gst_percent=0.0,
                 gst_amount=total_gst * ratio,
                 round_off=0.0,
                 delivery_charge=order.delivery_charge * ratio,
@@ -2830,7 +2830,7 @@ def split_bill():
             ratio = part_subtotal / total_subtotal if total_subtotal > 0 else 0
             part_discount = discount * ratio
             part_taxable = part_subtotal - part_discount + (order.delivery_charge * ratio)
-            part_gst = part_taxable * 0.05
+            part_gst = part_taxable * 0.0
             part_exact = part_taxable + part_gst
             
             inv = Invoice(
@@ -2838,7 +2838,7 @@ def split_bill():
                 invoice_number=f"INV-{order.id}-Itm{part_num}-{datetime.utcnow().strftime('%H%M%S')}",
                 subtotal=part_subtotal,
                 discount=part_discount,
-                gst_percent=5.0,
+                gst_percent=0.0,
                 gst_amount=part_gst,
                 round_off=round(part_exact) - part_exact,
                 delivery_charge=order.delivery_charge * ratio,

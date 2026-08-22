@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <meta name="csrf-token" content="IjNlMmFhODRlMzdmYzlmYTE0ZTdlNDY4N2Y4Y2VlZWMyMGNhNGIzOTAi.aobq0Q.pQV5VVMaDuh4Us6v_C3aMCD-DhE">
+    <title>Edit Order - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=2.0">
-    <!-- Socket.IO ONLY FOR ADMIN PANEL (does not cause lag like customer facing side) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="/static/css/admin.css?v=2.0">
+    <!-- Socket.IO Removed to fix server lag on Render -->
     <script>
         function toggleDropdown(id) {
             document.getElementById(id).classList.toggle('active');
@@ -57,7 +56,7 @@
             }
         });
     </script>
-    {% block head %}{% endblock %}
+    
 </head>
 <body>
     <!-- Mobile Sidebar Backdrop Overlay -->
@@ -67,7 +66,7 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div style="display:flex; align-items:center; gap:10px;">
-                <img src="{{ url_for('static', filename='img/logo.png') }}?v=6.0" alt="Logo" style="height: 30px; border-radius: 4px;">
+                <img src="/static/img/logo.png?v=5.0" alt="Logo" style="height: 30px; border-radius: 4px;">
                 <h2>SOUL SIP CAFE</h2>
             </div>
             <button class="sidebar-close-btn" onclick="toggleSidebar(false)" title="Close Menu">
@@ -77,58 +76,55 @@
         <div class="sidebar-content">
             <div class="nav-section">
                 <div class="nav-section-title">Operations</div>
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-grid-2"></i> Operations Hub</a>
+                <a href="/admin/dashboard" class="nav-link "><i class="fa-solid fa-grid-2"></i> Operations Hub</a>
             </div>
             
-            {% if current_user.role in ['admin', 'manager', 'waiter'] %}
+            
             <div class="nav-section">ORDERS & BILLING</div>
-            <a href="/admin/live_orders" class="nav-link {% if active_page == 'live_orders' %}active{% endif %}"><i class="fa-solid fa-bell-concierge"></i> Live Orders / KDS</a>
-            <a href="/admin/new_parcel" class="nav-link {% if active_page == 'new_parcel' %}active{% endif %}"><i class="fa-solid fa-box"></i> New Parcel Order</a>
-            <a href="/admin/live_tables" class="nav-link {% if active_page == 'live_tables' %}active{% endif %}"><i class="fa-solid fa-utensils"></i> Tables View</a>
-            <a href="/admin/tables" class="nav-link {% if active_page == 'tables' %}active{% endif %}"><i class="fa-solid fa-chair"></i> Tables Management</a>
-            {% endif %}
+            <a href="/admin/live_orders" class="nav-link active"><i class="fa-solid fa-bell-concierge"></i> Live Orders / KDS</a>
+            <a href="/admin/new_parcel" class="nav-link "><i class="fa-solid fa-box"></i> New Parcel Order</a>
+            <a href="/admin/live_tables" class="nav-link "><i class="fa-solid fa-utensils"></i> Tables View</a>
+            <a href="/admin/tables" class="nav-link "><i class="fa-solid fa-chair"></i> Tables Management</a>
             
-            {% if current_user.role in ['admin', 'manager', 'cashier'] %}
+            
+            
             <div class="nav-section">FINANCIALS</div>
-            <a href="/admin/billing" class="nav-link {% if active_page == 'billing' %}active{% endif %}"><i class="fa-solid fa-file-invoice-dollar"></i> Billing Screen</a>
-            <a href="/admin/invoices" class="nav-link {% if active_page == 'invoices' %}active{% endif %}"><i class="fa-solid fa-receipt"></i> Invoices</a>
-            <a href="/admin/credit" class="nav-link {% if active_page == 'credit' %}active{% endif %}"><i class="fa-solid fa-book-open"></i> Due / Credit Ledger</a>
-            <a href="/admin/refunds" class="nav-link {% if active_page == 'refunds' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Refunds</a>
-            <a href="/admin/cashflow" class="nav-link {% if active_page == 'cashflow' %}active{% endif %}"><i class="fa-solid fa-money-bill-transfer"></i> Cash Flow</a>
-            <a href="/admin/expenses" class="nav-link {% if active_page == 'expenses' %}active{% endif %}"><i class="fa-solid fa-hand-holding-dollar"></i> Expenses</a>
-            <a href="/admin/day_end" class="nav-link {% if active_page == 'day_end' %}active{% endif %}"><i class="fa-solid fa-lock"></i> Day End Close</a>
-            {% endif %}
+            <a href="/admin/billing" class="nav-link "><i class="fa-solid fa-file-invoice-dollar"></i> Billing Screen</a>
+            <a href="/admin/invoices" class="nav-link "><i class="fa-solid fa-receipt"></i> Invoices</a>
+            <a href="/admin/credit" class="nav-link "><i class="fa-solid fa-book-open"></i> Due / Credit Ledger</a>
+            <a href="/admin/refunds" class="nav-link "><i class="fa-solid fa-rotate-left"></i> Refunds</a>
+            <a href="/admin/cashflow" class="nav-link "><i class="fa-solid fa-money-bill-transfer"></i> Cash Flow</a>
+            <a href="/admin/expenses" class="nav-link "><i class="fa-solid fa-hand-holding-dollar"></i> Expenses</a>
+            <a href="/admin/day_end" class="nav-link "><i class="fa-solid fa-lock"></i> Day End Close</a>
             
-            {% if current_user.role in ['admin', 'manager'] %}
+            
+            
             <div class="nav-section">MENU & INVENTORY</div>
-            <a href="/admin/categories" class="nav-link {% if active_page == 'categories' %}active{% endif %}"><i class="fa-solid fa-list"></i> Categories</a>
-            <a href="/admin/items" class="nav-link {% if active_page == 'items' %}active{% endif %}"><i class="fa-solid fa-burger"></i> Menu Items</a>
+            <a href="/admin/categories" class="nav-link "><i class="fa-solid fa-list"></i> Categories</a>
+            <a href="/admin/items" class="nav-link "><i class="fa-solid fa-burger"></i> Menu Items</a>
             <a href="javascript:void(0)" onclick="openItemOnOffModal()" class="nav-link"><i class="fa-solid fa-toggle-on"></i> Item Quick On/Off</a>
-            <a href="/admin/inventory" class="nav-link {% if active_page == 'inventory' %}active{% endif %}"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
-            <a href="{{ url_for('admin_customers') }}" class="nav-link {% if active_page == 'customers' %}active{% endif %}"><i class="fa-solid fa-users"></i> Customers (CRM)</a>
-            <a href="{{ url_for('admin_coupons') }}" class="nav-link {% if active_page == 'coupons' %}active{% endif %}"><i class="fa-solid fa-ticket"></i> Discounts & Coupons</a>
-            <a href="{{ url_for('admin_feedback') }}" class="nav-link {% if active_page == 'feedback' %}active{% endif %}"><i class="fa-solid fa-star"></i> Feedback</a>
+            <a href="/admin/inventory" class="nav-link "><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="/admin/customers" class="nav-link "><i class="fa-solid fa-users"></i> Customers (CRM)</a>
+            <a href="/admin/coupons" class="nav-link "><i class="fa-solid fa-ticket"></i> Discounts & Coupons</a>
+            <a href="/admin/feedback" class="nav-link "><i class="fa-solid fa-star"></i> Feedback</a>
             
             <div class="nav-section">REPORTS</div>
-            <a href="/admin/reports" class="nav-link {% if active_page == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Analytics & Reports</a>
-            {% endif %}
+            <a href="/admin/reports" class="nav-link "><i class="fa-solid fa-chart-line"></i> Analytics & Reports</a>
             
-            {% if current_user.role == 'admin' %}
+            
+            
             <div class="nav-section">SETTINGS</div>
-            <a href="/admin/settings/outlet" class="nav-link {% if active_page == 'outlet_settings' %}active{% endif %}"><i class="fa-solid fa-sliders"></i> Outlet Settings</a>
-            <a href="/admin/staff" class="nav-link {% if active_page == 'staff' %}active{% endif %}"><i class="fa-solid fa-user-tie"></i> Staff / User Profiles</a>
-            <a href="/admin/activity_log" class="nav-link {% if active_page == 'activity_log' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</a>
-            {% endif %}
+            <a href="/admin/settings/outlet" class="nav-link "><i class="fa-solid fa-sliders"></i> Outlet Settings</a>
+            <a href="/admin/staff" class="nav-link "><i class="fa-solid fa-user-tie"></i> Staff / User Profiles</a>
+            <a href="/admin/activity_log" class="nav-link "><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</a>
             
-            {% if current_user.role == 'delivery' %}
-            <div class="nav-section">DELIVERY</div>
-            <a href="{{ url_for('my_deliveries') }}" class="nav-link {% if active_page == 'my_deliveries' %}active{% endif %}"><i class="fa-solid fa-motorcycle"></i> My Deliveries</a>
-            {% endif %}
             
-            {% if current_user.role in ['admin', 'manager', 'chef'] %}
+            
+            
+            
             <div class="nav-section">KITCHEN</div>
             <a href="/kitchen" class="nav-link" target="_blank"><i class="fa-solid fa-fire-burner"></i> Open KDS ↗</a>
-            {% endif %}
+            
         </div>
     </div>
 
@@ -141,7 +137,7 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <div class="pos-brand-logo" style="background: none; padding: 0;">
-                    <img src="{{ url_for('static', filename='img/logo.png') }}?v=6.0" alt="Logo" style="height: 28px; border-radius: 4px;">
+                    <img src="/static/img/logo.png?v=5.0" alt="Logo" style="height: 28px; border-radius: 4px;">
                 </div>
                 <div class="brand-outlet-title" title="Soul Sip Cafe">
                     Soul Sip Cafe (R393522)
@@ -192,9 +188,9 @@
                 <button class="petpooja-tool-item" onclick="openAlertsModal()" title="Alerts" style="position:relative;">
                     <i class="fa-regular fa-bell"></i>
                     <span>Alerts</span>
-                    <span id="alertsToolBadge" class="tool-badge" style="{% if low_stock_items|length == 0 %}display:none;{% endif %}">{{ low_stock_items|length }}</span>
+                    <span id="alertsToolBadge" class="tool-badge" style="">1</span>
                 </button>
-                <a href="{{ url_for('admin_logout') }}" class="petpooja-tool-item" title="Logout">
+                <a href="/admin/logout" class="petpooja-tool-item" title="Logout">
                     <i class="fa-solid fa-arrow-right-from-bracket" style="color:#ef4444;"></i>
                     <span style="color:#ef4444;">Logout</span>
                 </a>
@@ -202,18 +198,143 @@
         </div>
 
         <div class="content-wrapper">
-            {% if dummy %}
-                <div style="padding: 40px; text-align: center; color: var(--text-secondary); background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
-                    <h2>Coming Soon</h2>
-                    <p style="margin-top: 10px;">This page will be implemented in a future phase.</p>
+            
+                
+<script>
+window.onerror = function(msg, url, line, col, error) {
+    alert('JS Error: ' + msg + '\nLine: ' + line);
+};
+</script>
+<style>
+    .parcel-layout { display: flex; gap: 30px; }
+    .col-menu { flex: 2; }
+    .col-cart { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; position: sticky; top: 100px; height: calc(100vh - 140px); overflow-y: auto; }
+    
+    .category-section { margin-bottom: 30px; }
+    .category-title { font-size: 1.2rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color); }
+    
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .menu-item-card { background: white; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid var(--border-color); box-shadow: var(--shadow-sm); transition: var(--transition); }
+    .menu-item-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .menu-item-card.active-in-cart { background-color: #fffaf5; box-shadow: 0 0 0 1px var(--brand-orange), var(--shadow-sm); }
+    .menu-item-card.food-veg { border-left-color: #10b981; }
+    .menu-item-card.food-non-veg { border-left-color: #ef4444; }
+    .menu-item-card.food-egg { border-left-color: #f59e0b; }
+    .menu-item-card h4 { margin: 0 0 5px 0; font-size: 1.05rem; }
+    .menu-item-card .price { color: var(--brand-orange); font-weight: 600; margin-bottom: 10px; }
+    
+    .stepper { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+    .stepper button { flex: 1; background: #f8fafc; border: none; padding: 8px; cursor: pointer; font-size: 1rem; }
+    .stepper button:hover { background: #e2e8f0; }
+    .stepper span { flex: 1; text-align: center; font-weight: 600; }
+    
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+    .cart-total { font-size: 1.4rem; font-weight: bold; display: flex; justify-content: space-between; margin: 20px 0; }
+    
+    .info-box { background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+</style>
+
+<div class="parcel-layout">
+    <div class="col-menu">
+        <input type="text" id="searchInput" placeholder="Search menu items..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;" onkeyup="searchMenu()">
+        
+        <!-- Mobile Category Tabs -->
+        <div class="category-tabs-wrapper">
+            <div class="category-tab-btn active" onclick="switchCategory('cat-favorites', this)">⭐ Favorites</div>
+            
+            
+            <div class="category-tab-btn" onclick="switchCategory('cat-7', this)">Main Course</div>
+            
+            
+        </div>
+        
+        <div class="category-section active" id="cat-favorites">
+            <div class="category-title" style="color: var(--brand-orange);">⭐ Favorite Items</div>
+            <div class="menu-grid">
+                
+            </div>
+        </div>
+
+        
+        
+        <div class="category-section" id="cat-7">
+            <div class="category-title">Main Course</div>
+            <div class="menu-grid">
+                
+                
+                <div class="menu-item-card search-target card-item-7 food-veg" data-code="none" data-id="7" data-name="Paneer Butter Masala" data-price="333.33" onclick="updateCartEvent(this, 1)" style="cursor: pointer;">
+                    <div>
+                        <h4 class="item-name">Paneer Butter Masala </h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div class="price" style="margin:0;">₹333.33</div>
+                            
+                        </div>
+                    </div>
+                    <div class="stepper">
+                        <button type="button" onclick="try{event.stopPropagation();}catch(e){} updateCartEvent(this, -1)" style="pointer-events: auto;">-</button>
+                        <span id="qty-7" class="qty-display-7">0</span>
+                        <button type="button" onclick="try{event.stopPropagation();}catch(e){} updateCartEvent(this, 1)" style="pointer-events: auto;">+</button>
+                    </div>
                 </div>
-            {% else %}
-                {% block content %}{% endblock %}
-            {% endif %}
+                
+                
+            </div>
+        </div>
+        
+        
+    </div>
+    
+    <div class="col-cart">
+        <div class="info-box">
+            <div style="font-size: 0.9rem; color: var(--text-secondary);">Order #19 Details</div>
+            <div style="font-weight: 600; margin-top: 5px;">Type: <span style="text-transform: capitalize;">dine-in</span></div>
+            
+            <div style="font-weight: 600; margin-top: 5px;">Table: T-1</div>
+            
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-size: 0.9rem; color: var(--text-secondary);">Customer Mobile (Optional)</label>
+                <input type="text" id="order-custMobile" value="" placeholder="10-digit number" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+            <div style="margin-top: 5px; display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-size: 0.9rem; color: var(--text-secondary);">Customer Name</label>
+                <input type="text" id="order-custName" value="" placeholder="Name" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+            <div style="margin-top: 5px; display: flex; align-items: center; gap: 10px;">
+                Guests/Covers: <input type="number" id="order-covers" value="1" min="1" style="width: 60px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+            <div style="margin-top: 5px;">Status: <span style="text-transform: capitalize; color: var(--brand-blue);">new</span></div>
+        </div>
+    
+        <h3 style="margin-bottom: 20px;">Cart Summary</h3>
+        <div id="cart-items">
+            <div style="color: var(--text-secondary); text-align: center; margin-top: 20px;">Cart is empty</div>
+        </div>
+        
+        <div class="cart-total">
+            <span>Total:</span>
+            <span id="cart-total-amt">₹0</span>
+        </div>
+        <div class="save-bar">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-primary" style="flex: 1;" onclick="saveOrder(false)" id="btnSaveOrder">Save Changes</button>
+                <button class="btn-primary" style="flex: 1; background: var(--brand-blue);" onclick="saveOrder(true)" id="btnSavePrintOrder">Save & Print KOT</button>
+            </div>
+        </div>
+        <a href="/admin/live_orders" class="btn-secondary" style="display: block; text-align: center; width: 100%; margin-top: 10px; text-decoration: none; box-sizing: border-box;">Cancel</a>
+    <div class="mobile-cart-toggle">
+        <div style="font-size: 1.1rem; font-weight: bold;">
+            <span id="mobile-cart-count">0</span> items | <span id="mobile-cart-total" style="color:var(--brand-orange);">₹0</span>
+        </div>
+        <button class="cart-toggle-btn" onclick="toggleMobileCart()">View Cart</button>
+    </div>
+</div>
+
+
+            
         </div>
         
         <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: auto; padding: 12px 0;">
-            &copy; 2026 Soul Sip Cafe &bull; Radha Pos system
+            &copy; 2026 Soul Sip Cafe &bull; Powered by SOUL SIP POS
         </div>
     </div>
 
@@ -354,22 +475,20 @@
                 <button class="pos-modal-close" onclick="closeModal('alertsModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="pos-modal-body" id="alertsModalBody">
-                {% if low_stock_items|length > 0 %}
+                
                 <h4 style="font-size:0.9rem; color:#dc2626; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock Alerts</h4>
                 <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                    {% for itm in low_stock_items %}
+                    
                     <div style="background:#fef2f2; border:1px solid #fecaca; padding:10px 14px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <strong>{{ itm.name }}</strong>
-                            <div style="font-size:0.78rem; color:#64748b;">Current: <span style="color:#dc2626; font-weight:700;">{{ itm.current_stock }} {{ itm.unit }}</span> (Threshold: {{ itm.low_stock_threshold }})</div>
+                            <strong>Rice</strong>
+                            <div style="font-size:0.78rem; color:#64748b;">Current: <span style="color:#dc2626; font-weight:700;">3.0 kg</span> (Threshold: 5.0)</div>
                         </div>
                         <a href="/admin/inventory" class="btn-primary" style="padding:4px 10px; font-size:0.78rem; text-decoration:none;">Restock</a>
                     </div>
-                    {% endfor %}
+                    
                 </div>
-                {% else %}
-                <p style="text-align:center; color:#16a34a; padding:20px 0;"><i class="fa-solid fa-circle-check"></i> No inventory alerts. All stock is optimal.</p>
-                {% endif %}
+                
             </div>
         </div>
     </div>
@@ -882,11 +1001,11 @@
 
     <!-- MOBILE OWNER BOTTOM APP NAVIGATION BAR -->
     <nav class="mobile-bottom-nav">
-        <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-tab {% if active_page == 'dashboard' %}active{% endif %}">
+        <a href="/admin/dashboard" class="mobile-nav-tab ">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Hub</span>
         </a>
-        <a href="/admin/live_tables" class="mobile-nav-tab {% if active_page == 'live_tables' %}active{% endif %}">
+        <a href="/admin/live_tables" class="mobile-nav-tab ">
             <i class="fa-solid fa-utensils"></i>
             <span>Tables</span>
         </a>
@@ -896,7 +1015,7 @@
             </div>
             <span>New Order</span>
         </a>
-        <a href="/admin/live_orders" class="mobile-nav-tab {% if active_page == 'live_orders' %}active{% endif %}">
+        <a href="/admin/live_orders" class="mobile-nav-tab active">
             <i class="fa-solid fa-tower-broadcast"></i>
             <span>Live KDS</span>
         </a>
@@ -921,11 +1040,8 @@
             });
         });
     </script>
-{% block scripts %}{% endblock %}
-    {% block modals %}{% endblock %}
 </body>
 </html>
-
 
 
 

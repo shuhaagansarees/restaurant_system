@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <meta name="csrf-token" content="ImQyYmYzNGU3NmU1OGNlMzA1M2NhYTljZWRlZTdhNWEzMDdjYTk3MTUi.aofO5g.p_63yzsvKCL1MInhk7oU5w-YfUk">
+    <title>Live Orders - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=2.0">
-    <!-- Socket.IO ONLY FOR ADMIN PANEL (does not cause lag like customer facing side) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="/static/css/admin.css?v=2.0">
+    <!-- Socket.IO Removed to fix server lag on Render -->
     <script>
         function toggleDropdown(id) {
             document.getElementById(id).classList.toggle('active');
@@ -57,7 +56,7 @@
             }
         });
     </script>
-    {% block head %}{% endblock %}
+    
 </head>
 <body>
     <!-- Mobile Sidebar Backdrop Overlay -->
@@ -67,7 +66,7 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div style="display:flex; align-items:center; gap:10px;">
-                <img src="{{ url_for('static', filename='img/logo.png') }}?v=6.0" alt="Logo" style="height: 30px; border-radius: 4px;">
+                <img src="/static/img/logo.png?v=6.0" alt="Logo" style="height: 30px; border-radius: 4px;">
                 <h2>SOUL SIP CAFE</h2>
             </div>
             <button class="sidebar-close-btn" onclick="toggleSidebar(false)" title="Close Menu">
@@ -77,58 +76,55 @@
         <div class="sidebar-content">
             <div class="nav-section">
                 <div class="nav-section-title">Operations</div>
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-grid-2"></i> Operations Hub</a>
+                <a href="/admin/dashboard" class="nav-link "><i class="fa-solid fa-grid-2"></i> Operations Hub</a>
             </div>
             
-            {% if current_user.role in ['admin', 'manager', 'waiter'] %}
+            
             <div class="nav-section">ORDERS & BILLING</div>
-            <a href="/admin/live_orders" class="nav-link {% if active_page == 'live_orders' %}active{% endif %}"><i class="fa-solid fa-bell-concierge"></i> Live Orders / KDS</a>
-            <a href="/admin/new_parcel" class="nav-link {% if active_page == 'new_parcel' %}active{% endif %}"><i class="fa-solid fa-box"></i> New Parcel Order</a>
-            <a href="/admin/live_tables" class="nav-link {% if active_page == 'live_tables' %}active{% endif %}"><i class="fa-solid fa-utensils"></i> Tables View</a>
-            <a href="/admin/tables" class="nav-link {% if active_page == 'tables' %}active{% endif %}"><i class="fa-solid fa-chair"></i> Tables Management</a>
-            {% endif %}
+            <a href="/admin/live_orders" class="nav-link active"><i class="fa-solid fa-bell-concierge"></i> Live Orders / KDS</a>
+            <a href="/admin/new_parcel" class="nav-link "><i class="fa-solid fa-box"></i> New Parcel Order</a>
+            <a href="/admin/live_tables" class="nav-link "><i class="fa-solid fa-utensils"></i> Tables View</a>
+            <a href="/admin/tables" class="nav-link "><i class="fa-solid fa-chair"></i> Tables Management</a>
             
-            {% if current_user.role in ['admin', 'manager', 'cashier'] %}
+            
+            
             <div class="nav-section">FINANCIALS</div>
-            <a href="/admin/billing" class="nav-link {% if active_page == 'billing' %}active{% endif %}"><i class="fa-solid fa-file-invoice-dollar"></i> Billing Screen</a>
-            <a href="/admin/invoices" class="nav-link {% if active_page == 'invoices' %}active{% endif %}"><i class="fa-solid fa-receipt"></i> Invoices</a>
-            <a href="/admin/credit" class="nav-link {% if active_page == 'credit' %}active{% endif %}"><i class="fa-solid fa-book-open"></i> Due / Credit Ledger</a>
-            <a href="/admin/refunds" class="nav-link {% if active_page == 'refunds' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Refunds</a>
-            <a href="/admin/cashflow" class="nav-link {% if active_page == 'cashflow' %}active{% endif %}"><i class="fa-solid fa-money-bill-transfer"></i> Cash Flow</a>
-            <a href="/admin/expenses" class="nav-link {% if active_page == 'expenses' %}active{% endif %}"><i class="fa-solid fa-hand-holding-dollar"></i> Expenses</a>
-            <a href="/admin/day_end" class="nav-link {% if active_page == 'day_end' %}active{% endif %}"><i class="fa-solid fa-lock"></i> Day End Close</a>
-            {% endif %}
+            <a href="/admin/billing" class="nav-link "><i class="fa-solid fa-file-invoice-dollar"></i> Billing Screen</a>
+            <a href="/admin/invoices" class="nav-link "><i class="fa-solid fa-receipt"></i> Invoices</a>
+            <a href="/admin/credit" class="nav-link "><i class="fa-solid fa-book-open"></i> Due / Credit Ledger</a>
+            <a href="/admin/refunds" class="nav-link "><i class="fa-solid fa-rotate-left"></i> Refunds</a>
+            <a href="/admin/cashflow" class="nav-link "><i class="fa-solid fa-money-bill-transfer"></i> Cash Flow</a>
+            <a href="/admin/expenses" class="nav-link "><i class="fa-solid fa-hand-holding-dollar"></i> Expenses</a>
+            <a href="/admin/day_end" class="nav-link "><i class="fa-solid fa-lock"></i> Day End Close</a>
             
-            {% if current_user.role in ['admin', 'manager'] %}
+            
+            
             <div class="nav-section">MENU & INVENTORY</div>
-            <a href="/admin/categories" class="nav-link {% if active_page == 'categories' %}active{% endif %}"><i class="fa-solid fa-list"></i> Categories</a>
-            <a href="/admin/items" class="nav-link {% if active_page == 'items' %}active{% endif %}"><i class="fa-solid fa-burger"></i> Menu Items</a>
+            <a href="/admin/categories" class="nav-link "><i class="fa-solid fa-list"></i> Categories</a>
+            <a href="/admin/items" class="nav-link "><i class="fa-solid fa-burger"></i> Menu Items</a>
             <a href="javascript:void(0)" onclick="openItemOnOffModal()" class="nav-link"><i class="fa-solid fa-toggle-on"></i> Item Quick On/Off</a>
-            <a href="/admin/inventory" class="nav-link {% if active_page == 'inventory' %}active{% endif %}"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
-            <a href="{{ url_for('admin_customers') }}" class="nav-link {% if active_page == 'customers' %}active{% endif %}"><i class="fa-solid fa-users"></i> Customers (CRM)</a>
-            <a href="{{ url_for('admin_coupons') }}" class="nav-link {% if active_page == 'coupons' %}active{% endif %}"><i class="fa-solid fa-ticket"></i> Discounts & Coupons</a>
-            <a href="{{ url_for('admin_feedback') }}" class="nav-link {% if active_page == 'feedback' %}active{% endif %}"><i class="fa-solid fa-star"></i> Feedback</a>
+            <a href="/admin/inventory" class="nav-link "><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="/admin/customers" class="nav-link "><i class="fa-solid fa-users"></i> Customers (CRM)</a>
+            <a href="/admin/coupons" class="nav-link "><i class="fa-solid fa-ticket"></i> Discounts & Coupons</a>
+            <a href="/admin/feedback" class="nav-link "><i class="fa-solid fa-star"></i> Feedback</a>
             
             <div class="nav-section">REPORTS</div>
-            <a href="/admin/reports" class="nav-link {% if active_page == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Analytics & Reports</a>
-            {% endif %}
+            <a href="/admin/reports" class="nav-link "><i class="fa-solid fa-chart-line"></i> Analytics & Reports</a>
             
-            {% if current_user.role == 'admin' %}
+            
+            
             <div class="nav-section">SETTINGS</div>
-            <a href="/admin/settings/outlet" class="nav-link {% if active_page == 'outlet_settings' %}active{% endif %}"><i class="fa-solid fa-sliders"></i> Outlet Settings</a>
-            <a href="/admin/staff" class="nav-link {% if active_page == 'staff' %}active{% endif %}"><i class="fa-solid fa-user-tie"></i> Staff / User Profiles</a>
-            <a href="/admin/activity_log" class="nav-link {% if active_page == 'activity_log' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</a>
-            {% endif %}
+            <a href="/admin/settings/outlet" class="nav-link "><i class="fa-solid fa-sliders"></i> Outlet Settings</a>
+            <a href="/admin/staff" class="nav-link "><i class="fa-solid fa-user-tie"></i> Staff / User Profiles</a>
+            <a href="/admin/activity_log" class="nav-link "><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</a>
             
-            {% if current_user.role == 'delivery' %}
-            <div class="nav-section">DELIVERY</div>
-            <a href="{{ url_for('my_deliveries') }}" class="nav-link {% if active_page == 'my_deliveries' %}active{% endif %}"><i class="fa-solid fa-motorcycle"></i> My Deliveries</a>
-            {% endif %}
             
-            {% if current_user.role in ['admin', 'manager', 'chef'] %}
+            
+            
+            
             <div class="nav-section">KITCHEN</div>
             <a href="/kitchen" class="nav-link" target="_blank"><i class="fa-solid fa-fire-burner"></i> Open KDS ↗</a>
-            {% endif %}
+            
         </div>
     </div>
 
@@ -141,7 +137,7 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <div class="pos-brand-logo" style="background: none; padding: 0;">
-                    <img src="{{ url_for('static', filename='img/logo.png') }}?v=6.0" alt="Logo" style="height: 28px; border-radius: 4px;">
+                    <img src="/static/img/logo.png?v=6.0" alt="Logo" style="height: 28px; border-radius: 4px;">
                 </div>
                 <div class="brand-outlet-title" title="Soul Sip Cafe">
                     Soul Sip Cafe (R393522)
@@ -192,9 +188,9 @@
                 <button class="petpooja-tool-item" onclick="openAlertsModal()" title="Alerts" style="position:relative;">
                     <i class="fa-regular fa-bell"></i>
                     <span>Alerts</span>
-                    <span id="alertsToolBadge" class="tool-badge" style="{% if low_stock_items|length == 0 %}display:none;{% endif %}">{{ low_stock_items|length }}</span>
+                    <span id="alertsToolBadge" class="tool-badge" style="">1</span>
                 </button>
-                <a href="{{ url_for('admin_logout') }}" class="petpooja-tool-item" title="Logout">
+                <a href="/admin/logout" class="petpooja-tool-item" title="Logout">
                     <i class="fa-solid fa-arrow-right-from-bracket" style="color:#ef4444;"></i>
                     <span style="color:#ef4444;">Logout</span>
                 </a>
@@ -202,18 +198,347 @@
         </div>
 
         <div class="content-wrapper">
-            {% if dummy %}
-                <div style="padding: 40px; text-align: center; color: var(--text-secondary); background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
-                    <h2>Coming Soon</h2>
-                    <p style="margin-top: 10px;">This page will be implemented in a future phase.</p>
+            
+                
+<div class="filters-bar">
+    <div class="filters-left">
+        <select id="filter-type" onchange="applyFilters()">
+            <option value="all">All Types</option>
+            <option value="dine-in">Dine-in</option>
+            <option value="parcel">Parcel</option>
+        </select>
+        <select id="filter-branch" onchange="applyFilters()">
+            <option value="all">All Branches</option>
+            
+                <option value="7">Main Branch</option>
+            
+                <option value="8">Main Branch</option>
+            
+                <option value="9">Main Branch</option>
+            
+                <option value="10">Main Branch</option>
+            
+        </select>
+        <button class="btn-clear" onclick="clearFilters()">Clear</button>
+    </div>
+    <div class="filters-right">
+        <label class="sound-toggle">
+            <input type="checkbox" id="sound-toggle" checked>
+            <span>🔔 Sound on New Order</span>
+        </label>
+        <button class="btn-primary" onclick="alert('New Parcel - Coming in Phase 5')">New Parcel</button>
+    </div>
+</div>
+
+<!-- Settle Bill Modal -->
+<div id="settle-modal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h3 style="margin:0;">Settle & Save - <span id="settle-order-title"></span></h3>
+            <span style="font-size:1.2rem; font-weight:bold;">[₹<span id="settle-total-display">0</span>]</span>
+        </div>
+        
+        <div class="form-group">
+            <label>Payment Type</label>
+            <div style="display:flex; gap:15px; margin-top:5px;">
+                <label><input type="radio" name="payment-method" value="cash" checked onchange="togglePaymentMethod()"> Cash</label>
+                <label><input type="radio" name="payment-method" value="card" onchange="togglePaymentMethod()"> Card</label>
+                <label><input type="radio" name="payment-method" value="due" onchange="togglePaymentMethod()"> Due</label>
+                <label><input type="radio" name="payment-method" value="other" onchange="togglePaymentMethod()"> Other</label>
+                <label><input type="radio" name="payment-method" value="part" onchange="togglePaymentMethod()"> Part</label>
+            </div>
+        </div>
+        
+        <div id="other-payment-wrapper" class="form-group" style="display:none; background:var(--bg-color); padding:10px; border-radius:6px;">
+            <label>Other Payment Type</label>
+            <select id="other-payment-type" style="margin-bottom:10px;">
+                <option value="Google Pay">Google Pay</option>
+                <option value="PhonePe">PhonePe</option>
+                <option value="Paytm">Paytm</option>
+                <option value="Zomato Pay">Zomato Pay</option>
+                <option value="Swiggy Dineout">Swiggy Dineout</option>
+            </select>
+            <input type="text" id="payment-note" placeholder="Add note (optional)">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+            <div class="form-group">
+                <label>Customer Paid</label>
+                <input type="number" id="settle-customer-paid" oninput="calculateSettleChange()" placeholder="Enter amount">
+            </div>
+            <div class="form-group">
+                <label>Return to Customer</label>
+                <div id="settle-return-display" style="padding:10px; font-weight:bold; color:var(--text-color);">₹0</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Tip</label>
+                <input type="number" id="settle-tip" value="0">
+            </div>
+            <div class="form-group">
+                <label>Settlement Amount</label>
+                <input type="number" id="settle-amount" readonly style="background:var(--bg-color); border:none;">
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+            <button class="btn-secondary" onclick="openDiscountModal()" style="flex:1;">% Apply Discount</button>
+            <button class="btn-secondary" onclick="openSplitModal()" style="flex:1;">➗ Split Bill</button>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn-secondary" onclick="closeModal('settle-modal')" style="flex:1;">Cancel</button>
+            <button class="btn-primary" onclick="submitSettle()" style="flex:1;">Settle & Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Discount Modal -->
+<div id="discount-modal" class="modal" style="z-index: 10001;">
+    <div class="modal-content" style="max-width: 450px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h3 style="margin:0;">Applied Discount</h3>
+            <span style="cursor:pointer; font-size:1.5rem;" onclick="closeModal('discount-modal')">&times;</span>
+        </div>
+        
+        <div class="form-group">
+            <label>Custom Discount <span style="color:var(--brand-orange); font-size:0.8rem; float:right;">Add More</span></label>
+            <select id="discount-scope">
+                <option value="all">All Items</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="text" id="discount-reason" placeholder="Reason">
+        </div>
+        
+        <div class="form-group" style="display:flex; gap:15px;">
+            <label><input type="radio" name="discount-type" value="percent" checked> Percentage</label>
+            <label><input type="radio" name="discount-type" value="fixed"> Fixed</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="number" id="discount-value" placeholder="Enter Value">
+        </div>
+        
+        <hr style="border: 1px dashed var(--border-color); margin: 20px 0;">
+        
+        <div class="form-group">
+            <!-- Loyalty Points -->
+            <div id="settle-loyalty-section" style="display:none; padding: 10px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 6px; margin-top: 10px;">
+                <div style="font-size:0.9rem; color:#047857; margin-bottom:5px;">Available Loyalty Points: <strong id="settle-available-points">0</strong></div>
+                <label style="font-size:0.8rem; color:#047857;">Redeem Points</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="number" id="settle-redeem-points" max="0" placeholder="Points to redeem" style="flex:1; border: 1px solid #6ee7b7; padding: 8px;">
+                    <button class="btn-primary" style="background-color: #10b981;" onclick="applyPointsDiscount()">Apply</button>
                 </div>
-            {% else %}
-                {% block content %}{% endblock %}
-            {% endif %}
+            </div>
+
+            <label>Coupon Code</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="settle-coupon" placeholder="Enter coupon code" style="text-transform: uppercase;">
+                <button class="btn-secondary" style="color:var(--brand-orange);" onclick="document.getElementById('settle-coupon').value=''">Clear</button>
+                <button class="btn-primary" style="background:#10b981;">Apply</button>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn-secondary" onclick="closeModal('discount-modal')" style="flex:1;">Cancel</button>
+            <button class="btn-primary" onclick="saveDiscount()" style="flex:1; background:#dc2626;">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Split Bill Modal -->
+<div id="split-modal" class="modal" style="z-index: 10001;">
+    <div class="modal-content" style="max-width: 800px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h3 style="margin:0;">Split Bill</h3>
+            <span style="cursor:pointer; font-size:1.5rem;" onclick="closeModal('split-modal')">&times;</span>
+        </div>
+        
+        <div style="display:flex; border-bottom: 1px solid var(--border-color); margin-bottom:20px;">
+            <div class="split-tab active" onclick="switchSplitTab('portion')" id="tab-portion" style="padding:10px 20px; cursor:pointer; border-bottom: 3px solid var(--brand-orange); font-weight:bold; color:var(--brand-orange);">⬡ Portion Wise</div>
+            <div class="split-tab" onclick="switchSplitTab('percentage')" id="tab-percentage" style="padding:10px 20px; cursor:pointer; color:var(--text-secondary);">% Percentage Wise</div>
+            <div class="split-tab" onclick="switchSplitTab('item')" id="tab-item" style="padding:10px 20px; cursor:pointer; color:var(--text-secondary);">☷ Item Wise</div>
+        </div>
+        
+        <!-- Portion Tab -->
+        <div id="split-content-portion" class="split-content-pane">
+            <div class="form-group">
+                <label>Please enter number in which bill can be splitted:</label>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                    <span style="font-size:1.2rem; color:var(--text-secondary);">1/</span>
+                    <input type="number" id="split-ways" value="2" min="2" style="max-width:200px;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Percentage Tab -->
+        <div id="split-content-percentage" class="split-content-pane" style="display:none;">
+            <div class="form-group">
+                <label>Percentage for Part 1</label>
+                <input type="number" id="split-percentage-1" value="50" max="100">
+            </div>
+            <div class="form-group">
+                <label>Percentage for Part 2</label>
+                <input type="number" id="split-percentage-2" value="50" readonly style="background:var(--bg-color); border:none;">
+            </div>
+        </div>
+        
+        <!-- Item Wise Tab -->
+        <div id="split-content-item" class="split-content-pane" style="display:none;">
+            <div style="display:flex; gap:20px; height: 300px;">
+                <!-- Left: Order Items -->
+                <div style="flex:1; border:1px solid var(--border-color); border-radius:6px; overflow-y:auto;">
+                    <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; display:flex; gap:10px;">
+                        <input type="checkbox" id="split-all-items" onchange="toggleAllSplitItems()"> All Items
+                    </div>
+                    <div id="split-item-list" style="padding:10px;">
+                        <!-- JS injects items here -->
+                    </div>
+                </div>
+                
+                <!-- Right: Parts -->
+                <div style="flex:1; display:flex; flex-direction:column; gap:15px; overflow-y:auto;" id="split-parts-container">
+                    <div class="split-part-box" data-part="1" style="border:1px solid var(--border-color); border-radius:6px;">
+                        <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
+                            Part 1 <button class="btn-secondary" style="padding:2px 8px; font-size:0.8rem; color:#dc2626; background:white;" onclick="assignItemsToPart(1)">Add</button>
+                        </div>
+                        <div class="part-items" id="part-items-1" style="padding:10px; min-height:50px; font-size:0.9rem;"></div>
+                    </div>
+                    
+                    <div class="split-part-box" data-part="2" style="border:1px solid var(--border-color); border-radius:6px;">
+                        <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
+                            Part 2 <button class="btn-secondary" style="padding:2px 8px; font-size:0.8rem; color:#dc2626; background:white;" onclick="assignItemsToPart(2)">Add</button>
+                        </div>
+                        <div class="part-items" id="part-items-2" style="padding:10px; min-height:50px; font-size:0.9rem;"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-secondary" style="margin-top:10px;" onclick="addSplitPart()">+ Add Part</button>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+            <button class="btn-secondary" onclick="closeModal('split-modal')">Cancel</button>
+            <button class="btn-primary" onclick="submitSplit()" style="background:#dc2626;">Save Split</button>
+        </div>
+    </div>
+</div>
+
+<!-- Kanban board swipe hint removed as columns are now vertical on mobile -->
+<div class="kanban-board">
+    <!-- NEW -->
+    <div class="kanban-column" id="col-new" ondrop="drop(event, 'new')" ondragover="allowDrop(event)">
+        <div class="column-header new-header">
+            <h3>New</h3>
+            <span class="count-badge" id="count-new">1</span>
+        </div>
+        <div class="column-body" id="list-new">
+            
+                <div class="order-card" data-id="19" data-type="dine-in" data-branch="7">
+    <div class="order-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <span class="order-id">#19</span>
+            <span class="order-time">04:33 AM</span>
+            <span class="order-elapsed" data-time="1787200436525.0" style="margin-left: 8px; font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; background: #fef08a; color: #854d0e;">0m ago</span>
+        </div>
+        
+        <a href="/admin/edit_order/19" style="color: var(--brand-blue); text-decoration: none; font-size: 0.9rem; padding: 2px 6px; border: 1px solid var(--brand-blue); border-radius: 4px;" title="Edit Order">Edit</a>
+        
+    </div>
+    <div class="order-table" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            Table T-1
+            
+        </div>
+        
+        
+            
+        
+        
+        <div style="font-size: 0.8rem; background: var(--border-color); padding: 2px 6px; border-radius: 12px; color: var(--text-secondary);">
+            1 KOT
+        </div>
+        
+    </div>
+    <div class="order-items-summary">
+        
+            <div>2x Paneer Butter Masala</div>
+        
+    </div>
+    <div class="order-actions">
+        <div class="status-btn-container" style="display: flex; gap: 8px; margin-bottom: 8px;">
+            
+                <button class="btn-status" style="flex:1;" onclick="try{event.preventDefault();}catch(e){} updateStatus(19, 'preparing')">Start Preparing</button>
+            
+        </div>
+        
+        
+            
+            
+                
+            
+            
+            <button class="btn-primary" style="width:100%; background:#dc2626;" onclick="try{event.preventDefault();}catch(e){} openSettleModal(19, 'dine-in', '', '', '0.0', '')">Settle Bill</button>
+        
+    </div>
+</div>
+
+
+
+            
+        </div>
+    </div>
+    
+    <!-- PREPARING -->
+    <div class="kanban-column" id="col-preparing" ondrop="drop(event, 'preparing')" ondragover="allowDrop(event)">
+        <div class="column-header preparing-header">
+            <h3>Preparing</h3>
+            <span class="count-badge" id="count-preparing">0</span>
+        </div>
+        <div class="column-body" id="list-preparing">
+            
+        </div>
+    </div>
+    
+    <!-- SERVED -->
+    <div class="kanban-column" id="col-served" ondrop="drop(event, 'served')" ondragover="allowDrop(event)">
+        <div class="column-header served-header">
+            <h3>Served</h3>
+            <span class="count-badge" id="count-served">0</span>
+        </div>
+        <div class="column-body" id="list-served">
+            
+        </div>
+    </div>
+    
+    <!-- COMPLETED -->
+    <div class="kanban-column" id="col-completed" ondrop="drop(event, 'completed')" ondragover="allowDrop(event)">
+        <div class="column-header completed-header">
+            <h3>Completed (Today)</h3>
+            <span class="count-badge" id="count-completed">0</span>
+        </div>
+        <div class="column-body" id="list-completed">
+            
+        </div>
+    </div>
+</div>
+
+
+<!-- Waiter Calls Panel -->
+<div id="waiter-calls-panel" style="position: fixed; bottom: 20px; right: 20px; width: 300px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+    
+</div>
+
+<!-- Audio for notification -->
+<audio id="notif-sound" src="/static/audio/beep.wav" preload="auto"></audio>
+<audio id="waiter-sound" src="/static/audio/chime.wav" preload="auto"></audio>
+
+            
         </div>
         
         <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: auto; padding: 12px 0;">
-            &copy; 2026 Soul Sip Cafe &bull; Radha Pos system
+            &copy; 2026 Soul Sip Cafe &bull; Powered by SOUL SIP POS
         </div>
     </div>
 
@@ -354,22 +679,20 @@
                 <button class="pos-modal-close" onclick="closeModal('alertsModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="pos-modal-body" id="alertsModalBody">
-                {% if low_stock_items|length > 0 %}
+                
                 <h4 style="font-size:0.9rem; color:#dc2626; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock Alerts</h4>
                 <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                    {% for itm in low_stock_items %}
+                    
                     <div style="background:#fef2f2; border:1px solid #fecaca; padding:10px 14px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <strong>{{ itm.name }}</strong>
-                            <div style="font-size:0.78rem; color:#64748b;">Current: <span style="color:#dc2626; font-weight:700;">{{ itm.current_stock }} {{ itm.unit }}</span> (Threshold: {{ itm.low_stock_threshold }})</div>
+                            <strong>Rice</strong>
+                            <div style="font-size:0.78rem; color:#64748b;">Current: <span style="color:#dc2626; font-weight:700;">3.0 kg</span> (Threshold: 5.0)</div>
                         </div>
                         <a href="/admin/inventory" class="btn-primary" style="padding:4px 10px; font-size:0.78rem; text-decoration:none;">Restock</a>
                     </div>
-                    {% endfor %}
+                    
                 </div>
-                {% else %}
-                <p style="text-align:center; color:#16a34a; padding:20px 0;"><i class="fa-solid fa-circle-check"></i> No inventory alerts. All stock is optimal.</p>
-                {% endif %}
+                
             </div>
         </div>
     </div>
@@ -882,11 +1205,11 @@
 
     <!-- MOBILE OWNER BOTTOM APP NAVIGATION BAR -->
     <nav class="mobile-bottom-nav">
-        <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-tab {% if active_page == 'dashboard' %}active{% endif %}">
+        <a href="/admin/dashboard" class="mobile-nav-tab ">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Hub</span>
         </a>
-        <a href="/admin/live_tables" class="mobile-nav-tab {% if active_page == 'live_tables' %}active{% endif %}">
+        <a href="/admin/live_tables" class="mobile-nav-tab ">
             <i class="fa-solid fa-utensils"></i>
             <span>Tables</span>
         </a>
@@ -896,7 +1219,7 @@
             </div>
             <span>New Order</span>
         </a>
-        <a href="/admin/live_orders" class="mobile-nav-tab {% if active_page == 'live_orders' %}active{% endif %}">
+        <a href="/admin/live_orders" class="mobile-nav-tab active">
             <i class="fa-solid fa-tower-broadcast"></i>
             <span>Live KDS</span>
         </a>
@@ -921,11 +1244,565 @@
             });
         });
     </script>
-{% block scripts %}{% endblock %}
-    {% block modals %}{% endblock %}
+
+<script>
+    var socket = window.socket || (typeof io !== 'undefined' ? io() : null);
+    
+    let currentSettleOrder = null;
+    let currentSettleOrderId = null;
+    let currentSettleOrderTotal = 0;
+    let currentSettleCoupon = '';
+    let currentSettleMobile = '';
+    let currentAvailablePoints = 0;
+    
+    // Discount variables
+    let appliedDiscountType = null;
+    let appliedDiscountValue = 0;
+    let appliedDiscountReason = '';
+    let orderItemsMap = {}; // orderId -> items
+
+    // Fix for mobile devices: when screen wakes up or tab becomes visible, reload to fetch missed real-time events
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            window.location.reload();
+        }
+    });
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    function openSettleModal(orderId, type, customerName, customerMobile, totalStr, coupon) {
+        currentSettleOrderId = orderId;
+        currentSettleOrderTotal = parseFloat(totalStr);
+        currentSettleCoupon = coupon || '';
+        currentSettleMobile = customerMobile || '';
+        
+        appliedDiscountType = null;
+        appliedDiscountValue = 0;
+        appliedDiscountReason = '';
+        
+        document.getElementById('settle-order-title').innerText = `Order #${orderId}`;
+        document.getElementById('settle-total-display').innerText = currentSettleOrderTotal.toFixed(2);
+        
+        document.getElementById('settle-amount').value = currentSettleOrderTotal.toFixed(2);
+        document.getElementById('settle-customer-paid').value = '';
+        document.getElementById('settle-return-display').innerText = '₹0';
+        document.getElementById('settle-return-display').style.color = 'var(--text-color)';
+        document.getElementById('settle-coupon').value = '';
+        document.getElementById('settle-redeem-points').value = '';
+        document.getElementById('settle-loyalty-section').style.display = 'none';
+
+        if (currentSettleMobile) {
+            fetch('/api/customer/history?mobile=' + encodeURIComponent(currentSettleMobile))
+                .then(function(resp) { return resp.json(); })
+                .then(function(data) {
+                    if (data.success && data.loyalty_points > 0) {
+                        currentAvailablePoints = data.loyalty_points;
+                        document.getElementById('settle-available-points').innerText = data.loyalty_points;
+                        document.getElementById('settle-redeem-points').max = data.loyalty_points;
+                        document.getElementById('settle-loyalty-section').style.display = 'block';
+                    }
+                })
+                .catch(function(e) { console.error('Error fetching loyalty points:', e); });
+        }
+        
+        document.getElementById('settle-modal').classList.add('active');
+    }
+    
+    function togglePaymentMethod() {
+        const method = document.querySelector('input[name="payment-method"]:checked').value;
+        const wrapper = document.getElementById('other-payment-wrapper');
+        if (method === 'other') {
+            wrapper.style.display = 'block';
+        } else {
+            wrapper.style.display = 'none';
+        }
+    }
+    
+    function calculateSettleChange() {
+        const paidStr = document.getElementById('settle-customer-paid').value;
+        const total = parseFloat(document.getElementById('settle-amount').value) || 0;
+        const display = document.getElementById('settle-return-display');
+        
+        if (!paidStr) {
+            display.innerText = '₹0';
+            display.style.color = 'var(--text-color)';
+            return;
+        }
+        
+        const paid = parseFloat(paidStr);
+        const diff = paid - total;
+        
+        if (diff < 0) {
+            display.innerText = 'Less Amt.';
+            display.style.color = '#dc2626'; // red
+        } else {
+            display.innerText = 'Return: ₹' + diff.toFixed(2);
+            display.style.color = '#10b981'; // green
+        }
+    }
+
+    function openDiscountModal() {
+        document.getElementById('discount-modal').classList.add('active');
+    }
+    
+    function saveDiscount() {
+        const dReason = document.getElementById('discount-reason').value;
+        const dType = document.querySelector('input[name="discount-type"]:checked').value;
+        const dValue = parseFloat(document.getElementById('discount-value').value) || 0;
+        
+        if (dValue > 0) {
+            appliedDiscountType = dType;
+            appliedDiscountValue = dValue;
+            appliedDiscountReason = dReason;
+            
+            let discountAmount = 0;
+            // Reverse engineering subtotal from total: (total / 1.05)
+            const subtotal = currentSettleOrderTotal / 1.05;
+            if (dType === 'percent') {
+                discountAmount = subtotal * (dValue / 100);
+            } else {
+                discountAmount = dValue;
+            }
+            
+            const newSubtotal = subtotal - discountAmount;
+            const newTotal = (newSubtotal * 1.05).toFixed(2);
+            
+            document.getElementById('settle-amount').value = newTotal;
+            document.getElementById('settle-total-display').innerText = newTotal + " (Discounted)";
+        }
+        
+        closeModal('discount-modal');
+    }
+
+    function applyPointsDiscount() {
+        const redeemInput = document.getElementById('settle-redeem-points').value;
+        const pts = parseInt(redeemInput);
+        if (!pts || pts <= 0) return;
+        
+        if (pts > currentAvailablePoints) {
+            alert('Cannot redeem more points than available!');
+            document.getElementById('settle-redeem-points').value = currentAvailablePoints;
+            return;
+        }
+
+        // Each point is Rs. 1 off (GST applies after discount)
+        const subtotal = currentSettleOrderTotal / 1.05; 
+        if (pts > subtotal) {
+            alert('Discount cannot exceed the order subtotal!');
+            return;
+        }
+
+        // Apply discount logic
+        const discountAmt = pts;
+        const newTotal = ((subtotal - discountAmt) * 1.05).toFixed(2);
+        
+        appliedDiscountType = 'loyalty';
+        appliedDiscountValue = pts;
+        appliedDiscountReason = `Redeemed ${pts} points`;
+
+        document.getElementById('settle-amount').value = newTotal;
+        document.getElementById('settle-total-display').innerText = newTotal + " (Points Redeemed)";
+        calculateSettleChange();
+        closeModal('discount-modal');
+    }
+
+    let currentSplitType = 'portion';
+    let splitItemCounter = 0;
+    
+    function switchSplitTab(tab) {
+        document.querySelectorAll('.split-tab').forEach(t => {
+            t.classList.remove('active');
+            t.style.color = 'var(--text-secondary)';
+            t.style.borderBottom = 'none';
+        });
+        document.querySelectorAll('.split-content-pane').forEach(p => p.style.display = 'none');
+        
+        const selected = document.getElementById(`tab-${tab}`);
+        selected.classList.add('active');
+        selected.style.color = 'var(--brand-orange)';
+        selected.style.borderBottom = '3px solid var(--brand-orange)';
+        
+        document.getElementById(`split-content-${tab}`).style.display = 'block';
+        currentSplitType = tab;
+    }
+    
+    function openSplitModal() {
+        document.getElementById('split-modal').classList.add('active');
+        fetch(`/api/order_details/${currentSettleOrderId}`)
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    renderSplitItems(data.items);
+                }
+            })
+            .catch(function(e) {
+                console.error(e);
+            });
+    }
+    
+    function renderSplitItems(items) {
+        const list = document.getElementById('split-item-list');
+        list.innerHTML = '';
+        items.forEach((item, idx) => {
+            for(let i=0; i<item.quantity; i++) {
+                splitItemCounter++;
+                list.innerHTML += `
+                    <div class="split-item-row" data-id="${splitItemCounter}" data-menuid="${item.menu_item_id}" data-price="${item.price}" style="display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border-color);">
+                        <input type="checkbox" class="split-item-chk" value="${splitItemCounter}">
+                        <span>${item.name}</span>
+                        <span style="margin-left:auto;">₹${item.price}</span>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    function toggleAllSplitItems() {
+        const checked = document.getElementById('split-all-items').checked;
+        document.querySelectorAll('.split-item-chk').forEach(c => c.checked = checked);
+    }
+    
+    function assignItemsToPart(partNumber) {
+        const checked = document.querySelectorAll('#split-item-list .split-item-chk:checked');
+        const partBox = document.getElementById(`part-items-${partNumber}`);
+        
+        checked.forEach(chk => {
+            const row = chk.closest('.split-item-row');
+            chk.checked = false;
+            chk.style.display = 'none';
+            partBox.appendChild(row);
+        });
+    }
+    
+    function addSplitPart() {
+        const container = document.getElementById('split-parts-container');
+        const currentParts = container.querySelectorAll('.split-part-box').length;
+        const newPart = currentParts + 1;
+        
+        const div = document.createElement('div');
+        div.className = 'split-part-box';
+        div.dataset.part = newPart;
+        div.style = "border:1px solid var(--border-color); border-radius:6px;";
+        div.innerHTML = `
+            <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
+                Part ${newPart} <button class="btn-secondary" style="padding:2px 8px; font-size:0.8rem; color:#dc2626; background:white;" onclick="assignItemsToPart(${newPart})">Add</button>
+            </div>
+            <div class="part-items" id="part-items-${newPart}" style="padding:10px; min-height:50px; font-size:0.9rem;"></div>
+        `;
+        container.appendChild(div);
+    }
+
+    function submitSplit() {
+        const payload = {
+            order_id: currentSettleOrderId,
+            split_type: currentSplitType,
+        };
+        
+        if (currentSplitType === 'portion') {
+            payload.split_ways = parseInt(document.getElementById('split-ways').value);
+        } else if (currentSplitType === 'percentage') {
+            payload.percentages = [
+                parseInt(document.getElementById('split-percentage-1').value),
+                parseInt(document.getElementById('split-percentage-2').value)
+            ];
+        } else if (currentSplitType === 'item') {
+            const parts = [];
+            document.querySelectorAll('.split-part-box').forEach(box => {
+                const partNum = box.dataset.part;
+                const items = [];
+                box.querySelectorAll('.split-item-row').forEach(row => {
+                    items.push({
+                        menu_item_id: parseInt(row.dataset.menuid),
+                        price: parseFloat(row.dataset.price)
+                    });
+                });
+                if (items.length > 0) parts.push({ part: partNum, items: items });
+            });
+            payload.item_parts = parts;
+        }
+        
+        fetch('/api/split_bill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': 'ImQyYmYzNGU3NmU1OGNlMzA1M2NhYTljZWRlZTdhNWEzMDdjYTk3MTUi.aofO5g.p_63yzsvKCL1MInhk7oU5w-YfUk'},
+            body: JSON.stringify(payload)
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error splitting bill');
+            }
+        });
+    }
+
+    function submitSettle() {
+        const method = document.querySelector('input[name="payment-method"]:checked').value;
+        const otherMethod = document.getElementById('other-payment-type').value;
+        const paymentNote = document.getElementById('payment-note').value;
+        const customerPaid = parseFloat(document.getElementById('settle-customer-paid').value) || 0;
+        const tipAmount = parseFloat(document.getElementById('settle-tip').value) || 0;
+        const coupon = document.getElementById('settle-coupon').value;
+        const redeemedPoints = (appliedDiscountType === 'loyalty') ? appliedDiscountValue : 0;
+        const delivery = document.getElementById('settle-delivery') ? document.getElementById('settle-delivery').value : 0;
+        
+        // Calculate change for DB
+        const total = parseFloat(document.getElementById('settle-amount').value) || 0;
+        let change = 0;
+        if (customerPaid > total) {
+            change = customerPaid - total;
+        }
+        
+        let payload = {
+            order_ids: [currentSettleOrderId],
+            payment_method: method,
+            custom_payment_method: method === 'other' ? otherMethod : null,
+            payment_note: paymentNote,
+            customer_paid: customerPaid,
+            change_returned: change,
+            tip_amount: tipAmount,
+            coupon_code: coupon,
+            redeemed_points: redeemedPoints,
+            delivery_charge: delivery,
+            discount_type: appliedDiscountType,
+            discount_value: appliedDiscountValue,
+            discount_reason: appliedDiscountReason
+        };
+        
+        fetch('/api/settle_bill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': 'ImQyYmYzNGU3NmU1OGNlMzA1M2NhYTljZWRlZTdhNWEzMDdjYTk3MTUi.aofO5g.p_63yzsvKCL1MInhk7oU5w-YfUk'},
+            body: JSON.stringify(payload)
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error settling bill');
+            }
+        });
+    }
+
+    // Unlock audio on first user interaction to bypass browser autoplay policies
+    let audioUnlocked = false;
+    document.body.addEventListener('click', () => {
+        if (!audioUnlocked) {
+            const audio = document.getElementById('notif-sound');
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audioUnlocked = true;
+                }).catch(err => console.log('Audio unlock failed', err));
+            }
+        }
+    });
+    
+    function resolveCall(callId) {
+        fetch(`/api/resolve_call/${callId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : ''}
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                const el = document.getElementById(`waiter-call-${callId}`);
+                if (el) el.remove();
+            }
+        });
+    }
+
+    let lastUpdateCheck = Date.now() / 1000;
+    
+    // Check if we need to play a sound from a previous reload
+    if (localStorage.getItem('play_update_sound') === 'true') {
+        localStorage.removeItem('play_update_sound');
+        if (document.getElementById('sound-toggle').checked) {
+            const audio = document.getElementById('notif-sound');
+            if (audio) {
+                let playCount = 0;
+                function playBeep() {
+                    if (playCount < 3) {
+                        audio.play().catch(e => console.log('Audio play failed:', e));
+                    }
+                }
+                audio.onended = () => {
+                    playCount++;
+                    if (playCount < 3) {
+                        setTimeout(playBeep, 500);
+                    }
+                };
+                playBeep();
+            }
+        }
+    }
+    
+    setInterval(function() {
+        // If a modal is open (e.g. settling bill), delay the update so we don't interrupt the user
+        if (document.querySelector('.modal.active')) return;
+        
+        fetch(`/api/check_updates?since=${lastUpdateCheck}`)
+            .then(function(resp) { return resp.ok ? resp.json() : null; })
+            .then(function(data) {
+                if (data && data.has_updates) {
+                    localStorage.setItem('play_update_sound', 'true');
+                    fetch(window.location.href)
+                        .then(function(htmlResp) { return htmlResp.text(); })
+                        .then(function(htmlText) {
+                            const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+                            document.querySelector('.kanban-board').innerHTML = doc.querySelector('.kanban-board').innerHTML;
+                            updateCounts();
+                            lastUpdateCheck = data.timestamp;
+                        })
+                        .catch(function(e) { window.location.reload(); });
+                }
+            })
+            .catch(function(e) {
+                console.error("Polling error", e);
+            });
+    }, 10000);
+
+    // Drag and Drop Logic
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text/plain", ev.target.dataset.id);
+        ev.target.classList.add('dragging');
+    }
+
+    document.addEventListener('dragend', (ev) => {
+        if(ev.target.classList) ev.target.classList.remove('dragging');
+    });
+
+    function drop(ev, newStatus) {
+        ev.preventDefault();
+        const orderId = ev.dataTransfer.getData("text/plain");
+        const draggedEl = document.querySelector(`.order-card[data-id="${orderId}"]`);
+        
+        // Find the closest column body
+        let dropTarget = ev.target.closest('.kanban-column').querySelector('.column-body');
+        
+        if (draggedEl && dropTarget && draggedEl.parentElement !== dropTarget) {
+            dropTarget.appendChild(draggedEl);
+            updateStatusAPI(orderId, newStatus);
+            updateCardButtons(draggedEl, newStatus);
+        }
+    }
+    
+    // Button Logic
+    function updateStatus(orderId, newStatus) {
+        try {
+            const card = document.querySelector(`.order-card[data-id="${orderId}"]`);
+            const targetList = document.getElementById(`list-${newStatus}`);
+            if (card && targetList) {
+                targetList.appendChild(card);
+                updateStatusAPI(orderId, newStatus);
+                updateCardButtons(card, newStatus);
+            } else {
+                alert('DOM Error: Cannot find card or target list');
+            }
+        } catch(e) {
+            alert('JS Error: ' + e);
+        }
+    }
+    }
+    
+    function updateCardButtons(card, status) {
+        const actionDiv = card.querySelector('.status-btn-container');
+        if (!actionDiv) return;
+        if (status === 'new') {
+            actionDiv.innerHTML = `<button class="btn-status" style="flex:1;" onclick="updateStatus(${card.dataset.id}, 'preparing')">Start Preparing</button>`;
+        } else if (status === 'preparing') {
+            actionDiv.innerHTML = `<button class="btn-status" style="flex:1;" onclick="updateStatus(${card.dataset.id}, 'served')">Mark Served</button>`;
+        } else if (status === 'served') {
+            actionDiv.innerHTML = `<button class="btn-status" style="flex:1;" onclick="updateStatus(${card.dataset.id}, 'completed')">Complete</button>`;
+        } else {
+            actionDiv.innerHTML = '';
+        }
+        updateCounts();
+    }
+    
+    function updateStatusAPI(orderId, status) {
+        fetch('/api/update_order_status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
+            body: JSON.stringify({ order_id: orderId, status: status })
+        }).catch(function(err) {
+            console.error("Failed to update status", err);
+            alert("Error updating order status!");
+        });
+    }
+    
+    function updateCounts() {
+        document.getElementById('count-new').innerText = document.querySelectorAll('#list-new .order-card').length;
+        document.getElementById('count-preparing').innerText = document.querySelectorAll('#list-preparing .order-card').length;
+        document.getElementById('count-served').innerText = document.querySelectorAll('#list-served .order-card').length;
+        document.getElementById('count-completed').innerText = document.querySelectorAll('#list-completed .order-card').length;
+    }
+    
+    // Filtering logic
+    function applyFilters() {
+        const typeFilter = document.getElementById('filter-type').value;
+        const branchFilter = document.getElementById('filter-branch').value;
+        
+        document.querySelectorAll('.order-card').forEach(card => {
+            const cardType = card.dataset.type;
+            const cardBranch = card.dataset.branch;
+            
+            let matchType = (typeFilter === 'all' || cardType === typeFilter);
+            let matchBranch = (branchFilter === 'all' || cardBranch === branchFilter);
+            
+            if (matchType && matchBranch) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        // We do not update counts on filter to show true counts, or we could if requested.
+    }
+    
+    function clearFilters() {
+        document.getElementById('filter-type').value = 'all';
+        document.getElementById('filter-branch').value = 'all';
+        applyFilters();
+    }
+
+    // Dynamic timer for Kitchen Display System (KDS)
+    function updateOrderTimers() {
+        document.querySelectorAll('.order-elapsed').forEach(timer => {
+            const timeStr = timer.getAttribute('data-time');
+            if (timeStr) {
+                // Parse timestamp directly
+                const orderTime = parseFloat(timeStr);
+                const now = new Date().getTime();
+                const diffMins = Math.floor(Math.max(0, now - orderTime) / 60000);
+                
+                timer.innerText = diffMins + 'm ago';
+                
+                // Color coding
+                if (diffMins >= 20) {
+                    timer.style.background = '#fef2f2'; // light red
+                    timer.style.color = '#dc2626'; // dark red
+                } else if (diffMins >= 10) {
+                    timer.style.background = '#fffbeb'; // light orange
+                    timer.style.color = '#d97706'; // dark orange
+                } else {
+                    timer.style.background = '#f0fdf4'; // light green
+                    timer.style.color = '#16a34a'; // dark green
+                }
+            }
+        });
+    }
+    
+    // Initial run and then every 30 seconds
+    updateOrderTimers();
+    setInterval(updateOrderTimers, 30000);
+</script>
+
 </body>
 </html>
-
 
 
 

@@ -54,9 +54,8 @@
     <div class="invoice-paper thermal-80" id="invoicePaper">
         <div class="text-center bold mb-2" style="font-size: 1.4em;">Soul Sip Cafe</div>
         <div class="text-center mb-2">
-            123 Main Street, City<br>
-            Phone: +91 9999999999<br>
-            GSTIN: 27AAAAA0000A1Z5
+            Shop no 07, Shiva Park, nearby Ayodhya market, Godadara, Surat, Gujarat 395010<br>
+            Phone: +91 8141005168
         </div>
         
         <div class="text-center bold" style="margin: 15px 0;">TAX INVOICE</div>
@@ -116,15 +115,8 @@
                 <td class="money">-{{ "%.2f"|format(invoice.discount) }}</td>
             </tr>
             {% endif %}
-            <tr>
-                <!-- Formula: gst = (subtotal - discount) * 0.05 -->
-                <td>CGST (2.5%)</td>
-                <td class="money">{{ "%.2f"|format(invoice.gst_amount / 2) }}</td>
-            </tr>
-            <tr>
-                <td>SGST (2.5%)</td>
-                <td class="money">{{ "%.2f"|format(invoice.gst_amount / 2) }}</td>
-            </tr>
+            
+            
             <tr>
                 <!-- Formula: round_off = rounded_total - exact_total -->
                 <td>Round Off</td>
@@ -149,7 +141,7 @@
         </div>
         
         <div style="text-align: center; font-size: 0.6em; color: #666; margin-top: 15px;">
-            &copy; 2026 Soul Sip Cafe.<br>All rights reserved. Unauthorized copying prohibited.
+            &copy; 2026 Soul Sip Cafe.<br>Radha Pos system
         </div>
     </div>
     
@@ -162,7 +154,7 @@
         
         function shareWhatsApp() {
             let billText = "*Soul Sip Cafe*\n";
-            billText += "123 Main Street, City\n";
+            billText += "Shop no 07, Shiva Park, nearby Ayodhya market, Godadara, Surat, Gujarat 395010\n";
             billText += "----------------------------\n";
             billText += "*TAX INVOICE*\n";
             billText += "Inv No: {{ invoice.invoice_number }}\n";
@@ -190,7 +182,7 @@
             {% if invoice.discount > 0 %}
             billText += "Discount: -Rs.{{ '%.2f'|format(invoice.discount) }}\n";
             {% endif %}
-            billText += "Taxes: Rs.{{ '%.2f'|format(invoice.gst_amount) }}\n";
+            
             billText += "Round Off: Rs.{{ '%.2f'|format(invoice.round_off) }}\n";
             billText += "*GRAND TOTAL: Rs.{{ invoice.total }}*\n";
             billText += "----------------------------\n";

@@ -1,0 +1,46 @@
+function updateStatusAPI(orderId, status) {
+    try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/update_order_status", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        var csrf = document.querySelector('meta[name="csrf-token"]');
+        if (csrf) {
+            xhr.setRequestHeader("X-CSRFToken", csrf.getAttribute('content'));
+        }
+        xhr.send(JSON.stringify({ order_id: orderId, status: status }));
+    } catch(e) {
+        alert("API Error: " + e);
+    }
+}
+
+function updateCardButtons(card, status) {
+    var orderId = card.getAttribute('data-id');
+    var actionDiv = card.querySelector('.order-actions');
+    if (!actionDiv) return;
+    
+    if (status === 'preparing') {
+        actionDiv.innerHTML = '<button class="btn-status" style="flex:1; background:#059669; color:white; border-color:#059669;" onclick="try{event.preventDefault();}catch(e){} updateStatus(' + orderId + ', \'served\')">Mark Served</button>';
+    } else if (status === 'served') {
+        actionDiv.innerHTML = '<button class="btn-status" style="flex:1; background:#4f46e5; color:white; border-color:#4f46e5;" onclick="try{event.preventDefault();}catch(e){} updateStatus(' + orderId + ', \'completed\')">Complete</button>';
+    } else if (status === 'completed') {
+        actionDiv.innerHTML = '';
+    }
+}
+
+function updateStatus(orderId, newStatus) {
+    try {
+        var card = document.querySelector('.order-card[data-id="' + orderId + '"]');
+        var targetList = document.getElementById('list-' + newStatus);
+        if (card && targetList) {
+            targetList.appendChild(card);
+            updateStatusAPI(orderId, newStatus);
+            updateCardButtons(card, newStatus);
+            
+            if (typeof updateCounts === 'function') {
+                updateCounts();
+            }
+        }
+    } catch(e) {
+        alert('Update Status Error: ' + e);
+    }
+}

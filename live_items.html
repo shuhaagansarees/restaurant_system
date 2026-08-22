@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Soul Sip Cafe Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin.css?v=2.0">
+    <script>
+        // Anti-DevTools Deterrent
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 123 || (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74 || event.keyCode === 67)) || (event.ctrlKey && event.keyCode === 85)) {
+                try{event.preventDefault();}catch(e){}
+                console.warn("Unauthorized access prohibited.");
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-logo" style="display:flex; justify-content:center; margin-bottom:10px;">
+                <img src="/static/img/logo.png?v=6.0" alt="Soul Sip Cafe Logo" style="height: 80px; width: auto; border-radius: 8px;">
+            </div>
+            <div class="login-subtitle">Admin Portal Sign In</div>
+            
+            
+              
+                <div class="flash-message">
+                  Please log in to access this page.
+                </div>
+              
+            
+
+            <form class="login-form" method="POST" action="/admin/login">
+<input type="hidden" name="csrf_token" value="IjEwNmQxZjMxMmJlZDU5MWM2YTAwNGI5YzYwNzZiZmM3MmI2ODQyMjYi.aolFiQ.0Gb5bhiVD2UdQux6k03yqMghJIQ"/>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="text" name="mobile" placeholder="Enter your mobile" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="login-actions">
+                    <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                        <input type="checkbox" name="remember"> Remember me
+                    </label>
+                </div>
+                <button type="submit" class="btn-primary">Sign in</button>
+            </form>
+        </div>
+        
+    </div>
+</body>
+</html>

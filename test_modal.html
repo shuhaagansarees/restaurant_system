@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<style>
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+</style>
+</head>
+<body>
+<button id="btn" data-item='{"id": 13, "name": "Cold Coffee (Classic)", "price": 69.0, "category_id": 1}' onclick="openEditItemModal(JSON.parse(this.dataset.item))">Edit</button>
+
+<div id="editItemModal" class="modal">
+    <div style="background: white; padding: 24px;">
+        <input type="text" id="edit_name">
+        <input type="number" id="edit_price">
+        <button onclick="closeEditModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function openEditItemModal(item) {
+        document.getElementById('edit_name').value = item.name || '';
+        document.getElementById('edit_price').value = item.price || '';
+        document.getElementById('editItemModal').style.display = 'flex';
+    }
+    function closeEditModal() {
+        document.getElementById('editItemModal').style.display = 'none';
+    }
+</script>
+</body>
+</html>

@@ -22,7 +22,7 @@
     <div class="col-main">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <p style="color: var(--text-secondary);">Drag and drop to reorder. This affects the customer menu.</p>
-            <button class="btn-primary" onclick="saveOrder()" id="btn-save-order" style="display: none;">Save New Order</button>
+            <button class="btn-primary" onclick="saveOrder()" id="btn-save-order" style="">Save New Order</button>
         </div>
         
         <ul class="cat-list" id="sortable">
@@ -131,19 +131,19 @@
         document.getElementById('edit_cat_name_gu').value = cat.name_gu || '';
         
         const modal = document.getElementById('editCatModal');
-        modal.style.display = 'flex';
+        modal.classList.add('active'); modal.style.display = '';
     }
 
     function closeEditCatModal() {
         const modal = document.getElementById('editCatModal');
-        modal.style.display = 'none';
+        modal.classList.remove('active');
     }
 </script>
 {% endblock %}
 
 {% block modals %}
 <!-- Edit Category Modal -->
-<div id="editCatModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+<div id="editCatModal" class="modal" style=" position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
     <div style="background: white; border-radius: 12px; max-width: 480px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); padding: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: #1e293b;" id="editCatModalTitle">✏️ Edit Category</h3>

@@ -1,5 +1,5 @@
 <!-- Customer History Modal -->
-<div id="customerHistoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+<div id="customerHistoryModal" style=" position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: white; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
         <div style="padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0;">Customer History</h3>
@@ -124,7 +124,7 @@ async function openCustomerHistory(mobile) {
     const modal = document.getElementById('customerHistoryModal');
     const body = document.getElementById('customerHistoryBody');
     
-    modal.style.display = 'flex';
+    modal.classList.add('active'); modal.style.display = '';
     body.innerHTML = 'Loading customer history...';
     
     try {

@@ -64,18 +64,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 secret_key = os.environ.get('SECRET_KEY')
 if not secret_key:
-    import secrets
-    import warnings
-    new_key = secrets.token_hex(24)
-    env_path = os.path.join(basedir, '.env')
-    try:
-        with open(env_path, 'a') as f:
-            f.write(f"\nSECRET_KEY={new_key}\n")
-        print("WARNING: New SECRET_KEY auto-generated, please verify .env is persistent")
-        secret_key = new_key
-    except Exception as e:
-        warnings.warn(f"Failed to write SECRET_KEY to .env: {e}. Sessions will invalidate on restart!")
-        secret_key = os.urandom(24)
+    secret_key = "soulsip_secure_restaurant_key_2026_very_secret"
 app.config['SECRET_KEY'] = secret_key
 app.permanent_session_lifetime = timedelta(minutes=30)
 
@@ -3360,11 +3349,18 @@ def magic_add_menu():
 
 @app.route('/admin/magic_update_admin')
 def magic_update_admin():
-    from werkzeug.security import generate_password_hash
-    admin = User.query.filter_by(role='admin').first()
-    if admin:
-        admin.mobile = '8141005168'
-        admin.password_hash = generate_password_hash('soulsip@2000')
-        db.session.commit()
-        return 'Admin updated successfully! New mobile: 8141005168'
-    return 'Admin not found.'
+    try:
+        from werkzeug.security import generate_password_hash
+        admin = User.query.filter_by(role='admin').first()
+        if admin:
+            existing = User.query.filter_by(mobile='8141005168').first()
+            if existing and existing.id != admin.id:
+                db.session.delete(existing)
+            admin.mobile = '8141005168'
+            admin.password_hash = generate_password_hash('soulsip@2000')
+            db.session.commit()
+            return 'Admin updated successfully! New mobile: 8141005168'
+        return 'Admin not found.'
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}"

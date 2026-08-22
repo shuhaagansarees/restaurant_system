@@ -76,53 +76,51 @@
 
     <audio id="notif-sound" src="/static/audio/beep.wav" preload="auto"></audio>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script>
-    let lastUpdateCheck = Date.now() / 1000;
     
-    setInterval(async () => {
-        try {
-            const resp = await fetch(`/api/check_updates?since=${lastUpdateCheck}`);
-            if (resp.ok) {
-                const data = await resp.json();
-                if (data.has_updates) {
-                    if (document.getElementById('sound-toggle').checked) {
-                        const audio = document.getElementById('notif-sound');
-                        let playCount = 0;
-                        function playBeep() {
-                            if (playCount < 3) {
-                                audio.play().catch(e => console.log(e));
-                            } else {
-                                try {
-                                    const htmlResp = await fetch(window.location.href);
-                                    const htmlText = await htmlResp.text();
-                                    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
-                                    document.querySelector('.kds-grid').innerHTML = doc.querySelector('.kds-grid').innerHTML;
-                                    lastUpdateCheck = data.timestamp;
-                                } catch(e) { window.location.reload(); }
-                            }
-                        }
-                        audio.onended = () => {
-                            playCount++;
-                            setTimeout(playBeep, 500); // 0.5s gap
-                        };
-                        playBeep(); // Start the first beep
-                    } else {
-                        try {
-                            const htmlResp = await fetch(window.location.href);
-                            const htmlText = await htmlResp.text();
-                            const doc = new DOMParser().parseFromString(htmlText, 'text/html');
-                            document.querySelector('.kds-grid').innerHTML = doc.querySelector('.kds-grid').innerHTML;
-                            lastUpdateCheck = data.timestamp;
-                        } catch(e) { window.location.reload(); }
-                    }
-                }
+    const socket = io({transports: ['websocket', 'polling']});
+    
+    function playBeeps() {
+        if (!document.getElementById('sound-toggle').checked) return;
+        const audio = document.getElementById('notif-sound');
+        let playCount = 0;
+        function playBeep() {
+            if (playCount < 3) {
+                audio.play().catch(e => console.log(e));
             }
-        } catch (e) {
-            console.error("Polling error", e);
         }
-    }, 10000);
-        
-        function checkEmpty() {
+        audio.onended = () => {
+            playCount++;
+            setTimeout(playBeep, 500); // 0.5s gap
+        };
+        playBeep(); // Start the first beep
+    }
+    
+    async function reloadKDS() {
+        try {
+            // Add a cache-busting parameter to ensure we fetch fresh HTML
+            const htmlResp = await fetch(window.location.pathname + '?_t=' + new Date().getTime());
+            const htmlText = await htmlResp.text();
+            const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+            document.querySelector('.kds-grid').innerHTML = doc.querySelector('.kds-grid').innerHTML;
+        } catch(e) { window.location.reload(); }
+    }
+
+    socket.on('new_order', function(data) {
+        playBeeps();
+        reloadKDS();
+    });
+    
+    socket.on('order_status_update', function(data) {
+        reloadKDS();
+    });
+    
+    socket.on('table_update', function(data) {
+        reloadKDS();
+    });
+    
+    function checkEmpty() {
             const grid = document.getElementById('kds-grid');
             if (grid.querySelectorAll('.kds-card').length === 0) {
                 grid.innerHTML = '<div class="empty-state" id="empty-state">No active orders</div>';

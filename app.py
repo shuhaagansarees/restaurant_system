@@ -3356,6 +3356,7 @@ def magic_update_admin():
             existing = User.query.filter_by(mobile='8141005168').first()
             if existing and existing.id != admin.id:
                 db.session.delete(existing)
+                db.session.flush()
             admin.mobile = '8141005168'
             admin.password_hash = generate_password_hash('soulsip@2000')
             db.session.commit()

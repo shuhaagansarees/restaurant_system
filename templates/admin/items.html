@@ -104,7 +104,7 @@
                             }|tojson|forceescape }}" onclick="openEditItemModal(JSON.parse(this.dataset.item))">
                                 ✏️ Edit
                             </button>
-                            <form method="POST" action="/admin/items/delete/{{ item.id }}" onsubmit="return confirm('Are you sure you want to delete \'{{ item.name|replace(\'\'\', \'\\\'\') }}\'?');" style="display: inline-block; margin: 0;">
+                            <form method="POST" action="/admin/items/delete/{{ item.id }}" onsubmit="return confirm('Are you sure you want to delete \'{{ item.name|replace(\"'\", \"\\\\'\") }}\'?');" style="display: inline-block; margin: 0;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="submit" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;" title="Delete Item">
                                     🗑️ Delete

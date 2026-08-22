@@ -3364,7 +3364,7 @@ def magic_update_admin():
     admin = User.query.filter_by(role='admin').first()
     if admin:
         admin.mobile = '8141005168'
-        admin.password = generate_password_hash('soulsip@2000')
+        admin.password_hash = generate_password_hash('soulsip@2000')
         db.session.commit()
         return 'Admin updated successfully! New mobile: 8141005168'
     return 'Admin not found.'

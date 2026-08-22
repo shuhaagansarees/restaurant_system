@@ -1,4 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+
+def ist_now():
+    return datetime.utcnow() + timedelta(hours=5, minutes=30)
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -78,7 +82,7 @@ class Order(db.Model):
     discount_type = db.Column(db.String(20), nullable=True) # 'percent', 'fixed'
     discount_value = db.Column(db.Float, default=0.0)
     delivery_staff_id = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=ist_now, index=True)
     has_new_items = db.Column(db.Boolean, default=False)
     created_by = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True, index=True)
     covers = db.Column(db.Integer, default=1)
@@ -96,16 +100,16 @@ class OrderItem(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=1)
     price_at_order = db.Column(db.Float, nullable=False)
     kot_number = db.Column(db.Integer, default=1)
-    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    added_at = db.Column(db.DateTime, default=ist_now)
     
     menu_item = db.relationship('MenuItem')
 
 class DayEndRecord(db.Model):
     __tablename__ = 'day_end_records'
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date, index=True)
+    date = db.Column(db.Date, nullable=False, default=lambda: ist_now().date(), index=True)
     closed_by = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=False, index=True)
-    closed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    closed_at = db.Column(db.DateTime, default=ist_now)
     total_sales = db.Column(db.Float, default=0.0)
     total_orders = db.Column(db.Integer, default=0)
     expected_cash = db.Column(db.Float, default=0.0)
@@ -134,7 +138,7 @@ class Invoice(db.Model):
     split_type = db.Column(db.String(20), nullable=True) # portion/percentage/item_wise
     split_metadata = db.Column(db.Text, nullable=True) # JSON string
     coupon_code = db.Column(db.String(50), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=ist_now, index=True)
     
     order = db.relationship('Order')
 
@@ -159,7 +163,7 @@ class Refund(db.Model):
     returned_via = db.Column(db.String(20)) # cash/upi/card
     note = db.Column(db.Text)
     status = db.Column(db.String(20), default='pending') # pending/completed
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     invoice = db.relationship('Invoice')
 
@@ -184,7 +188,7 @@ class ActivityLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True, index=True)
     action = db.Column(db.String(255), nullable=False)
     details = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     user = db.relationship('User')
 
@@ -206,7 +210,7 @@ class CustomerProfile(db.Model):
     name = db.Column(db.String(100), nullable=True)
     notes = db.Column(db.Text, nullable=True)
     loyalty_points = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
 
 class WaiterCall(db.Model):
     __tablename__ = 'waiter_calls'
@@ -214,7 +218,7 @@ class WaiterCall(db.Model):
     table_name = db.Column(db.String(20), nullable=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
     status = db.Column(db.String(20), default='pending') # pending/resolved
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
 
 class Feedback(db.Model):
     __tablename__ = 'feedback'
@@ -222,7 +226,7 @@ class Feedback(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
     rating = db.Column(db.Integer, nullable=False) # 1 to 5
     comment = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     order = db.relationship('Order')
 
@@ -233,7 +237,7 @@ class RawMaterial(db.Model):
     unit = db.Column(db.String(20), nullable=False) # kg, litre, pieces, packet
     current_stock = db.Column(db.Float, default=0.0)
     low_stock_threshold = db.Column(db.Float, default=5.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     logs = db.relationship('InventoryLog', backref='raw_material', lazy=True, cascade="all, delete-orphan")
 
@@ -245,7 +249,7 @@ class InventoryLog(db.Model):
     quantity = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     user = db.relationship('User')
 
@@ -257,7 +261,7 @@ class Expense(db.Model):
     payment_mode = db.Column(db.String(20), default='cash') # cash, upi, card, bank
     note = db.Column(db.Text, nullable=True)
     recorded_by = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     recorder = db.relationship('User', foreign_keys=[recorded_by])
 
@@ -268,7 +272,7 @@ class CashFlow(db.Model):
     amount = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(255), nullable=True)
     recorded_by = db.Column(db.Integer, db.ForeignKey('staff_users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=ist_now)
     
     recorder = db.relationship('User', foreign_keys=[recorded_by])
 

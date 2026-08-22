@@ -30,6 +30,10 @@ import zipfile
 import smtplib
 from email.message import EmailMessage
 from datetime import datetime, timedelta
+
+def ist_now():
+    return ist_now() + timedelta(hours=5, minutes=30)
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file, session
 from background_tasks import bg_queue, _send_whatsapp_task, _send_email_task
 from flask_socketio import SocketIO
@@ -491,7 +495,7 @@ def trigger_backup():
 @login_required
 @role_required('admin', 'manager')
 def download_today_data():
-    today = datetime.utcnow().date()
+    today = ist_now().date()
     today_start = datetime(today.year, today.month, today.day)
     
     today_orders = Order.query.filter(Order.created_at >= today_start).all()
@@ -605,14 +609,14 @@ def place_order():
     else:
         recent_order = Order.query.filter_by(branch_id=branch_id, type='parcel').order_by(Order.created_at.desc()).first()
         
-    if recent_order and recent_order.created_at and (datetime.utcnow() - recent_order.created_at).total_seconds() < 10:
+    if recent_order and recent_order.created_at and (ist_now() - recent_order.created_at).total_seconds() < 10:
         return jsonify({'success': True, 'order_id': recent_order.id, 'duplicate': True})
         
     if table and order_type == 'dine-in':
 
         table.status = 'occupied'
         if not table.session_start_time:
-            table.session_start_time = datetime.utcnow()
+            table.session_start_time = ist_now()
 
     new_order = Order(
         branch_id=branch_id, 
@@ -815,7 +819,7 @@ def update_order():
                     quantity=diff,
                     price_at_order=menu_item.price,
                     kot_number=next_kot,
-                    added_at=datetime.utcnow()
+                    added_at=ist_now()
                 )
                 db.session.add(new_oi)
                 
@@ -1079,8 +1083,8 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     # Timezone aware start of day (IST is UTC+5:30)
-    ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
-    ist_today_start = ist_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    current_ist_time = ist_now()
+    ist_today_start = current_ist_time.replace(hour=0, minute=0, second=0, microsecond=0)
     utc_today_start = ist_today_start - timedelta(hours=5, minutes=30)
     
     from sqlalchemy import func
@@ -1113,7 +1117,7 @@ def admin_dashboard():
 @role_required('manager', 'waiter')
 def live_orders():
     # Only show completed orders for today
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = ist_now().replace(hour=0, minute=0, second=0, microsecond=0)
     
     orders_new = [o for o in Order.query.options(joinedload(Order.items), joinedload(Order.table)).filter_by(status='new').order_by(Order.created_at.desc()).limit(50).all() if len(o.items) > 0]
     orders_preparing = [o for o in Order.query.options(joinedload(Order.items), joinedload(Order.table)).filter_by(status='preparing').order_by(Order.created_at.desc()).limit(50).all() if len(o.items) > 0]
@@ -1182,7 +1186,7 @@ def live_tables():
     
     # Calculate live totals and time
     from datetime import datetime
-    now = datetime.utcnow()
+    now = ist_now()
     
     grouped_tables = {}
     for t in tables:
@@ -1256,7 +1260,7 @@ def take_table_order():
     
     t.status = 'occupied'
     if not t.session_start_time:
-        t.session_start_time = datetime.utcnow()
+        t.session_start_time = ist_now()
         
     db.session.commit()
     
@@ -1524,7 +1528,7 @@ def settle_bill():
         c = Coupon.query.filter_by(code=coupon_code).first()
         if c and c.is_active:
             valid = True
-            if c.expiry_date and datetime.utcnow() > c.expiry_date:
+            if c.expiry_date and ist_now() > c.expiry_date:
                 valid = False
             if c.max_usage_limit and c.usage_count >= c.max_usage_limit:
                 valid = False
@@ -1561,7 +1565,7 @@ def settle_bill():
     
     invoice = Invoice(
         order_id=main_order.id,
-        invoice_number=f"INV-{main_order.id}-{datetime.utcnow().strftime('%H%M%S')}",
+        invoice_number=f"INV-{main_order.id}-{ist_now().strftime('%H%M%S')}",
         subtotal=subtotal,
         discount=discount,
         gst_percent=0.0,
@@ -2056,7 +2060,7 @@ def verify_coupon():
     if not c.is_active:
         return jsonify({'success': False, 'message': 'Coupon is not active.'})
         
-    if c.expiry_date and datetime.utcnow() > c.expiry_date:
+    if c.expiry_date and ist_now() > c.expiry_date:
         return jsonify({'success': False, 'message': 'Coupon has expired.'})
         
     if c.max_usage_limit and c.usage_count >= c.max_usage_limit:
@@ -2149,7 +2153,7 @@ def customer_history():
 @login_required
 @role_required('admin', 'manager')
 def day_end():
-    today = datetime.utcnow().date()
+    today = ist_now().date()
     today_start = datetime(today.year, today.month, today.day)
     
     today_invoices = Invoice.query.filter(Invoice.created_at >= today_start).all()
@@ -2174,7 +2178,7 @@ def day_end():
 @login_required
 @role_required('admin', 'manager')
 def day_end_close():
-    today = datetime.utcnow().date()
+    today = ist_now().date()
     existing_close = DayEndRecord.query.filter_by(date=today).first()
     if existing_close:
         return jsonify({'success': False, 'message': 'Day is already closed for today.'})
@@ -2206,7 +2210,7 @@ def day_end_close():
 @login_required
 @role_required('manager')
 def reports():
-    today = datetime.utcnow().date()
+    today = ist_now().date()
     today_start = datetime(today.year, today.month, today.day)
     
     today_invoices = Invoice.query.filter(Invoice.created_at >= today_start).all()
@@ -2495,7 +2499,7 @@ def report_export_pdf():
     title = f"Restaurant Report: {rtype.replace('_', ' ').title()}"
     elements.append(Paragraph(title, styles['Title']))
     
-    subtitle = f"Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}"
+    subtitle = f"Generated on {ist_now().strftime('%Y-%m-%d %H:%M:%S')}"
     if start or end:
         subtitle += f"<br/>Date Range: {start or 'Start'} to {end or 'Today'}"
     elements.append(Paragraph(subtitle, styles['Normal']))
@@ -2566,7 +2570,7 @@ def report_export_pdf():
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=f"report_{rtype}_{datetime.utcnow().strftime('%Y%m%d%H%M')}.pdf",
+        download_name=f"report_{rtype}_{ist_now().strftime('%Y%m%d%H%M')}.pdf",
         mimetype='application/pdf'
     )
 
@@ -2627,7 +2631,7 @@ def export_all_backup_csv():
         zip_file.writestr("5_inventory_current_stock.csv", inventory_output.getvalue())
         
     zip_buffer.seek(0)
-    filename = f"SoulSipCafe_FullBackup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.zip"
+    filename = f"SoulSipCafe_FullBackup_{ist_now().strftime('%Y%m%d_%H%M%S')}.zip"
     return send_file(
         zip_buffer,
         as_attachment=True,
@@ -2784,7 +2788,7 @@ def split_bill():
         for i in range(split_ways):
             inv = Invoice(
                 order_id=order.id,
-                invoice_number=f"INV-{order.id}-P{i+1}-{datetime.utcnow().strftime('%H%M%S')}",
+                invoice_number=f"INV-{order.id}-P{i+1}-{ist_now().strftime('%H%M%S')}",
                 subtotal=total_subtotal / split_ways,
                 discount=discount / split_ways,
                 gst_percent=0.0,
@@ -2805,7 +2809,7 @@ def split_bill():
             split_amount = round(exact_grand_total * ratio)
             inv = Invoice(
                 order_id=order.id,
-                invoice_number=f"INV-{order.id}-Pct{i+1}-{datetime.utcnow().strftime('%H%M%S')}",
+                invoice_number=f"INV-{order.id}-Pct{i+1}-{ist_now().strftime('%H%M%S')}",
                 subtotal=total_subtotal * ratio,
                 discount=discount * ratio,
                 gst_percent=0.0,
@@ -2835,7 +2839,7 @@ def split_bill():
             
             inv = Invoice(
                 order_id=order.id,
-                invoice_number=f"INV-{order.id}-Itm{part_num}-{datetime.utcnow().strftime('%H%M%S')}",
+                invoice_number=f"INV-{order.id}-Itm{part_num}-{ist_now().strftime('%H%M%S')}",
                 subtotal=part_subtotal,
                 discount=part_discount,
                 gst_percent=0.0,
@@ -2977,7 +2981,7 @@ def save_outlet_settings():
             db.session.add(s)
         else:
             s.value = str(v)
-            s.updated_at = datetime.utcnow()
+            s.updated_at = ist_now()
     log_activity('outlet_settings', f"{current_user.name} updated outlet POS configurations")
     db.session.commit()
     return jsonify({'success': True})
@@ -2986,7 +2990,7 @@ def save_outlet_settings():
 @login_required
 @role_required('admin', 'manager', 'cashier')
 def admin_expenses():
-    today = datetime.utcnow().date()
+    today = ist_now().date()
     today_start = datetime(today.year, today.month, today.day)
     expenses = Expense.query.order_by(Expense.created_at.desc()).all()
     today_expenses = [e for e in expenses if e.created_at >= today_start]
@@ -3021,7 +3025,7 @@ def add_expense():
 @role_required('admin', 'manager', 'cashier')
 def admin_cashflow():
     cashflows = CashFlow.query.order_by(CashFlow.created_at.desc()).all()
-    today = datetime.utcnow().date()
+    today = ist_now().date()
     today_start = datetime(today.year, today.month, today.day)
     today_cf = [c for c in cashflows if c.created_at >= today_start]
     
@@ -3145,7 +3149,7 @@ def api_toggle_item():
 @login_required
 def api_recent_invoices():
     invs = Invoice.query.order_by(Invoice.created_at.desc()).limit(8).all()
-    now = datetime.utcnow()
+    now = ist_now()
     res = []
     for i in invs:
         diff_mins = int((now - i.created_at).total_seconds() / 60)

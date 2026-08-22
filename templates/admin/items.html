@@ -211,6 +211,49 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function toggleItem(id, is_available) {
+        try {
+            await fetch('/api/toggle_item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
+                body: JSON.stringify({ item_id: id, is_available: is_available })
+            });
+        } catch(e) {
+            alert('Failed to toggle visibility');
+        }
+    }
+
+    function openEditItemModal(item) {
+        document.getElementById('editItemForm').action = '/admin/items/edit/' + item.id;
+        document.getElementById('editModalTitle').innerText = '✏️ Edit: ' + item.name;
+        document.getElementById('edit_name').value = item.name || '';
+        document.getElementById('edit_name_hi').value = item.name_hi || '';
+        document.getElementById('edit_name_gu').value = item.name_gu || '';
+        document.getElementById('edit_category_id').value = item.category_id || '';
+        document.getElementById('edit_price').value = item.price || '';
+        document.getElementById('edit_variant_name').value = item.variant_name || '';
+        document.getElementById('edit_description').value = item.description || '';
+        document.getElementById('edit_food_type').value = item.food_type || 'veg';
+        document.getElementById('edit_short_code').value = item.short_code || '';
+        document.getElementById('edit_is_favorite').checked = !!item.is_favorite;
+        document.getElementById('edit_is_combo').checked = !!item.is_combo;
+        
+        const modal = document.getElementById('editItemModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('editItemModal');
+        modal.style.display = 'none';
+    }
+</script>
+{% endblock %}
+
+{% block modals %}
 <!-- Edit Item Modal -->
 <div id="editItemModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
     <div style="background: white; border-radius: 12px; max-width: 550px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); padding: 24px; animation: modalFade 0.2s ease-out;">
@@ -292,44 +335,5 @@
     </div>
 </div>
 
-{% endblock %}
 
-{% block scripts %}
-<script>
-    async function toggleItem(id, is_available) {
-        try {
-            await fetch('/api/toggle_item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' },
-                body: JSON.stringify({ item_id: id, is_available: is_available })
-            });
-        } catch(e) {
-            alert('Failed to toggle visibility');
-        }
-    }
-
-    function openEditItemModal(item) {
-        document.getElementById('editItemForm').action = '/admin/items/edit/' + item.id;
-        document.getElementById('editModalTitle').innerText = '✏️ Edit: ' + item.name;
-        document.getElementById('edit_name').value = item.name || '';
-        document.getElementById('edit_name_hi').value = item.name_hi || '';
-        document.getElementById('edit_name_gu').value = item.name_gu || '';
-        document.getElementById('edit_category_id').value = item.category_id || '';
-        document.getElementById('edit_price').value = item.price || '';
-        document.getElementById('edit_variant_name').value = item.variant_name || '';
-        document.getElementById('edit_description').value = item.description || '';
-        document.getElementById('edit_food_type').value = item.food_type || 'veg';
-        document.getElementById('edit_short_code').value = item.short_code || '';
-        document.getElementById('edit_is_favorite').checked = !!item.is_favorite;
-        document.getElementById('edit_is_combo').checked = !!item.is_combo;
-        
-        const modal = document.getElementById('editItemModal');
-        modal.style.display = 'flex';
-    }
-
-    function closeEditModal() {
-        const modal = document.getElementById('editItemModal');
-        modal.style.display = 'none';
-    }
-</script>
 {% endblock %}

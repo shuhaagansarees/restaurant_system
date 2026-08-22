@@ -96,81 +96,6 @@
 </div>
 
 <!-- SECURE RESET MODAL -->
-<div class="modal" id="resetModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 14px; width: 90%; max-width: 480px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
-        <div style="display: flex; align-items: center; gap: 10px; color: #dc2626; margin-bottom: 12px;">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem;"></i>
-            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800;">Reset Transaction Data</h3>
-        </div>
-        <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 14px;">
-            This action will clear all <strong>Orders, Invoices, Refunds, Credit Records, and Day-End Summaries</strong>.
-        </p>
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.8rem; color: #166534;">
-            <i class="fa-solid fa-circle-check"></i> <strong>Safe Preservation:</strong> Your Food Menu, Categories, Tables &amp; QR codes, Staff Logins, and Admin Settings will <strong>NOT</strong> be deleted.
-        </div>
-        
-        <form method="POST" action="/admin/backup/reset_transactions">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Admin Password</label>
-                <input type="password" name="admin_password" required placeholder="Enter admin password" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Type <code>RESET</code> to confirm</label>
-                <input type="text" name="confirm_text" required placeholder="RESET" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; text-transform: uppercase;">
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeResetModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
-                <button type="submit" style="background: #dc2626; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">Confirm &amp; Reset</button>
-            </div>
-        </form>
-    </div>
-</div>
-{% endif %}
-
-<div class="report-layout">
-    <div class="report-sidebar">
-        <ul class="report-menu">
-            <li class="active" onclick="loadReport('sales', this)">General Sales Report</li>
-            <li onclick="loadReport('employee_sales', this)">Employee Sales Summary</li>
-            <li onclick="loadReport('category', this)">Category Sales</li>
-            <li onclick="loadReport('best_selling', this)">Best Selling Items</li>
-            <li onclick="loadReport('least_selling', this)">Least Selling Items</li>
-            <li onclick="loadReport('table_util', this)">Table Utilization</li>
-            <li onclick="loadReport('aov', this)">Average Order Value</li>
-            <li onclick="loadReport('covers', this)">Cover Size Summary</li>
-            <li onclick="loadReport('tips', this)">Tip Summary</li>
-            <li onclick="loadReport('orders', this)">Order History</li>
-            <li onclick="loadReport('customers', this)">Customer Insights &amp; Loyalty</li>
-            <li onclick="loadReport('cancellations', this)">Cancellations</li>
-            <li onclick="loadReport('day_end_summary', this)">Day-End Close (Z-Reports)</li>
-            <li onclick="loadReport('expense_summary', this)">Daily Expense Breakdown</li>
-            <li onclick="loadReport('cashflow_summary', this)">Cash Drawer / Cash Flow</li>
-        </ul>
-    </div>
-    
-    <div class="report-content">
-        <div class="report-header">
-            <h2 id="report-title">General Sales Report</h2>
-            <div class="report-filters">
-                <label>From: <input type="date" id="start-date" onchange="reloadCurrentReport()"></label>
-                <label>To: <input type="date" id="end-date" onchange="reloadCurrentReport()"></label>
-            </div>
-            <div>
-                <button class="btn-primary" onclick="exportReport()">Export CSV</button>
-                <button class="btn-primary" style="background: #ef4444; border-color: #ef4444;" onclick="exportPdf()">Export PDF</button>
-            </div>
-        </div>
-        
-        <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border-color);">
-            <table class="data-table" id="report-table" style="border: none;">
-                <thead id="report-thead"></thead>
-                <tbody id="report-tbody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -273,4 +198,83 @@
     // Load default
     loadReport('sales', document.querySelector('.report-menu li.active'));
 </script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="resetModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 14px; width: 90%; max-width: 480px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+        <div style="display: flex; align-items: center; gap: 10px; color: #dc2626; margin-bottom: 12px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem;"></i>
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800;">Reset Transaction Data</h3>
+        </div>
+        <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 14px;">
+            This action will clear all <strong>Orders, Invoices, Refunds, Credit Records, and Day-End Summaries</strong>.
+        </p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.8rem; color: #166534;">
+            <i class="fa-solid fa-circle-check"></i> <strong>Safe Preservation:</strong> Your Food Menu, Categories, Tables &amp; QR codes, Staff Logins, and Admin Settings will <strong>NOT</strong> be deleted.
+        </div>
+        
+        <form method="POST" action="/admin/backup/reset_transactions">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Admin Password</label>
+                <input type="password" name="admin_password" required placeholder="Enter admin password" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Type <code>RESET</code> to confirm</label>
+                <input type="text" name="confirm_text" required placeholder="RESET" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; text-transform: uppercase;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeResetModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                <button type="submit" style="background: #dc2626; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">Confirm &amp; Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="report-layout">
+    <div class="report-sidebar">
+        <ul class="report-menu">
+            <li class="active" onclick="loadReport('sales', this)">General Sales Report</li>
+            <li onclick="loadReport('employee_sales', this)">Employee Sales Summary</li>
+            <li onclick="loadReport('category', this)">Category Sales</li>
+            <li onclick="loadReport('best_selling', this)">Best Selling Items</li>
+            <li onclick="loadReport('least_selling', this)">Least Selling Items</li>
+            <li onclick="loadReport('table_util', this)">Table Utilization</li>
+            <li onclick="loadReport('aov', this)">Average Order Value</li>
+            <li onclick="loadReport('covers', this)">Cover Size Summary</li>
+            <li onclick="loadReport('tips', this)">Tip Summary</li>
+            <li onclick="loadReport('orders', this)">Order History</li>
+            <li onclick="loadReport('customers', this)">Customer Insights &amp; Loyalty</li>
+            <li onclick="loadReport('cancellations', this)">Cancellations</li>
+            <li onclick="loadReport('day_end_summary', this)">Day-End Close (Z-Reports)</li>
+            <li onclick="loadReport('expense_summary', this)">Daily Expense Breakdown</li>
+            <li onclick="loadReport('cashflow_summary', this)">Cash Drawer / Cash Flow</li>
+        </ul>
+    </div>
+    
+    <div class="report-content">
+        <div class="report-header">
+            <h2 id="report-title">General Sales Report</h2>
+            <div class="report-filters">
+                <label>From: <input type="date" id="start-date" onchange="reloadCurrentReport()"></label>
+                <label>To: <input type="date" id="end-date" onchange="reloadCurrentReport()"></label>
+            </div>
+            <div>
+                <button class="btn-primary" onclick="exportReport()">Export CSV</button>
+                <button class="btn-primary" style="background: #ef4444; border-color: #ef4444;" onclick="exportPdf()">Export PDF</button>
+            </div>
+        </div>
+        
+        <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border-color);">
+            <table class="data-table" id="report-table" style="border: none;">
+                <thead id="report-thead"></thead>
+                <tbody id="report-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}

@@ -978,7 +978,7 @@ def fix_dummy_inventory():
         clean_name = mi.name.strip()
         mat = RawMaterial.query.filter(db.func.lower(RawMaterial.name) == db.func.lower(clean_name)).first()
         if not mat:
-            mat = RawMaterial(name=clean_name, current_stock=0, unit='pcs', low_stock_threshold=5, is_auto_tracked=True)
+            mat = RawMaterial(name=clean_name, current_stock=0, unit='pcs', low_stock_threshold=5)
             db.session.add(mat)
     db.session.commit()
     return "Fix applied! Please go back to the inventory page."

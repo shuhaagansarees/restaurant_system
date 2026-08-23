@@ -32,7 +32,7 @@ from email.message import EmailMessage
 from datetime import datetime, timedelta
 
 def ist_now():
-    return ist_now() + timedelta(hours=5, minutes=30)
+    return datetime.utcnow() + timedelta(hours=5, minutes=30)
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file, session
 from background_tasks import bg_queue, _send_whatsapp_task, _send_email_task

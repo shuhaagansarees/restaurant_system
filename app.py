@@ -991,23 +991,30 @@ def sync_menu_inventory():
         return redirect(url_for('admin_inventory'))
         
     menu_items = MenuItem.query.all()
+    valid_names = [mi.name.strip().lower() for mi in menu_items]
+    
+    # 1. Delete inventory items that are no longer in the menu
+    all_materials = RawMaterial.query.all()
+    for mat in all_materials:
+        if mat.name.strip().lower() not in valid_names:
+            InventoryLog.query.filter_by(raw_material_id=mat.id).delete()
+            db.session.delete(mat)
+    db.session.commit()
+    
+    # 2. Add missing menu items to inventory
     count_added = 0
     for mi in menu_items:
         clean_name = mi.name.strip()
         mat = RawMaterial.query.filter(db.func.lower(RawMaterial.name) == db.func.lower(clean_name)).first()
         if not mat:
-            mat = RawMaterial(
-                name=clean_name,
-                unit='pcs',
-                current_stock=25.0,
-                low_stock_threshold=5.0
-            )
+            mat = RawMaterial(name=clean_name, current_stock=0, unit='pcs', low_stock_threshold=5)
             db.session.add(mat)
             count_added += 1
             
     db.session.commit()
-    flash(f"Successfully synced menu items! {count_added} new items linked to inventory tracking.", "success")
+    flash(f'Menu perfectly synced! Removed old items and added {count_added} new items to inventory.', 'success')
     return redirect(url_for('admin_inventory'))
+
 
 @app.route('/api/inventory/quick_update', methods=['POST'])
 @login_required

@@ -57,6 +57,8 @@
                 {% if item.is_favorite %}
                 <div class="menu-item-card search-target card-item-{{ item.id }} food-{{ item.food_type }}" data-code="{{ item.short_code | lower }}" data-id="{{ item.id }}" data-name="{{ item.name|escape }}" data-price="{{ item.price }}" onclick="updateCartEvent(this, 1)" style="cursor: pointer;">
                     <div>
+                        
+                        {% if item.image_url %}<img src="{{ item.image_url }}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">{% endif %}
                         <h4 class="item-name">{{ item.name }} {% if item.variant_name %}({{ item.variant_name }}){% endif %}</h4>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <div class="price" style="margin:0;">₹{{ item.price }}</div>
@@ -90,6 +92,8 @@
                 {% if not item.is_favorite %}
                 <div class="menu-item-card search-target card-item-{{ item.id }} food-{{ item.food_type }}" data-code="{{ item.short_code | lower }}" data-id="{{ item.id }}" data-name="{{ item.name|escape }}" data-price="{{ item.price }}" onclick="updateCartEvent(this, 1)" style="cursor: pointer;">
                     <div>
+                        
+                        {% if item.image_url %}<img src="{{ item.image_url }}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">{% endif %}
                         <h4 class="item-name">{{ item.name }} {% if item.variant_name %}({{ item.variant_name }}){% endif %}</h4>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <div class="price" style="margin:0;">₹{{ item.price }}</div>

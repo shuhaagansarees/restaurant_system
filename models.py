@@ -45,7 +45,8 @@ class MenuItem(db.Model):
     short_code = db.Column(db.String(10), nullable=True)
     variant_name = db.Column(db.String(50)) # e.g. Small/Medium/Large
     is_combo = db.Column(db.Boolean, default=False)
-    combo_items = db.Column(db.Text) # JSON string of what's included
+    combo_items = db.Column(db.Text)
+    image_url = db.Column(db.String(255), nullable=True) # JSON string of what's included
     is_available = db.Column(db.Boolean, default=True, index=True)
 
     def get_combo_items(self):

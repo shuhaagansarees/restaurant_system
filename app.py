@@ -1811,7 +1811,8 @@ def items():
         if name and cat_id and price:
             import json
             combo_json = json.dumps([i.strip() for i in combo_items.split(',') if i.strip()]) if is_combo else "[]"
-            item = MenuItem(category_id=cat_id, name=name, name_hi=name_hi, name_gu=name_gu, price=price, description=desc, desc_hi=desc_hi, desc_gu=desc_gu, variant_name=variant, is_combo=is_combo, combo_items=combo_json, is_favorite=is_favorite, food_type=food_type, short_code=short_code)
+            item = MenuItem(category_id=cat_id, name=name, name_hi=name_hi, name_gu=name_gu, price=price, description=desc, desc_hi=desc_hi, desc_gu=desc_gu, variant_name=variant, is_combo=is_combo,
+            image_url=image_url, combo_items=combo_json, is_favorite=is_favorite, food_type=food_type, short_code=short_code)
             db.session.add(item)
             db.session.commit()
             socketio.emit('menu_update', namespace='/')

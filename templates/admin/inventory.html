@@ -3,18 +3,19 @@
 {% block title %}Inventory & Stock Management - Soul Sip Cafe{% endblock %}
 {% block page_title %}Inventory & Stock Management{% endblock %}
 
-{% block topbar_actions %}
-<div style="display: flex; gap: 10px;">
-    <a href="{{ url_for('sync_menu_inventory') }}" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 8px 14px; font-size: 0.85rem; font-weight: 600;">
+
+
+{% block content %}
+
+<div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end;">
+    <a href="{{ url_for('sync_menu_inventory') }}" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 8px 14px; font-size: 0.85rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b;">
         <i class="fa-solid fa-arrows-rotate"></i> Sync All Menu Items
     </a>
-    <button class="btn-primary" onclick="openModal('newMaterialModal')" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.85rem; font-weight: 600;">
+    <button class="btn-primary" onclick="openModal('newMaterialModal')" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.85rem; font-weight: 600; border-radius: 6px;">
         <i class="fa-solid fa-plus"></i> New Material
     </button>
 </div>
-{% endblock %}
 
-{% block content %}
 <!-- Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}

@@ -3329,12 +3329,13 @@ def auto_migrate():
             db.session.rollback()
 
         # Seed Combos
-        combo_cat = Category.query.filter_by(name='Combos').first()
+                combo_cat = Category.query.filter_by(name='Combos').first()
         if not combo_cat:
-            max_sort = db.session.query(db.func.max(Category.sort_order)).scalar() or 0
-            combo_cat = Category(name='Combos', sort_order=max_sort + 1)
+            combo_cat = Category(name='Combos', sort_order=-1)
             db.session.add(combo_cat)
-            db.session.commit()
+        else:
+            combo_cat.sort_order = -1
+        db.session.commit()
         
         combos_data = [
             {'name': 'Margherita Pizza Combo', 'desc': 'Margherita Pizza + Cold Drink (of your choice)', 'price': 129.0, 'img': '/static/img/combos/margherita_pizza_combo.jpg'},

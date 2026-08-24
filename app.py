@@ -3329,7 +3329,7 @@ def auto_migrate():
             db.session.rollback()
 
         # Seed Combos
-                combo_cat = Category.query.filter_by(name='Combos').first()
+        combo_cat = Category.query.filter_by(name='Combos').first()
         if not combo_cat:
             combo_cat = Category(name='Combos', sort_order=-1)
             db.session.add(combo_cat)

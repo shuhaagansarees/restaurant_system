@@ -3361,6 +3361,8 @@ def auto_migrate():
                 db.session.add(mi)
             else:
                 mi.image_url = cd['img']
+                mi.price = cd['price']
+                mi.description = cd['desc']
         db.session.commit()
 
 

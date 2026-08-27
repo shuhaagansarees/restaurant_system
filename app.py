@@ -3344,7 +3344,7 @@ def auto_migrate():
             {'name': 'Momo Munch Combo', 'desc': 'Veg Steam Momos + Cold Drink', 'price': 99.0, 'img': '/static/img/combos/momo_munch_combo.jpg'},
             {'name': 'Aloo Tikki Frankie Combo', 'desc': 'Salted Fries + Aloo Tikki Frankie + Cold Drink', 'price': 129.0, 'img': '/static/img/combos/aloo_tikki_frankie_combo.jpg'},
             {'name': 'Frankie Fiesta Combo', 'desc': 'Paneer Frankie + Cold Coffee (Classic)', 'price': 119.0, 'img': '/static/img/combos/frankie_fiesta_combo.jpg'},
-            {'name': 'Sandwich Snack Combo', 'desc': 'Veg Cheese Sandwich + Cold Drink', 'price': 99.0, 'img': '/static/img/combos/sandwich_snack_combo.jpg'},
+            {'name': 'Sandwich Snack Combo', 'desc': 'Veg Cheese Grill + Cold Drink', 'price': 99.0, 'img': '/static/img/combos/sandwich_snack_combo.jpg'},
             {'name': 'Peri Peri Paneer Pizza Combo', 'desc': 'Peri Peri Paneer Pizza + Cold Coffee (Classic)', 'price': 139.0, 'img': '/static/img/combos/peri_peri_paneer_pizza_combo.jpg'},
             {'name': 'Classic Burger Combo', 'desc': 'Standard Veg Burger + Salted Fries + Cold Drink (of your choice)', 'price': 129.0, 'img': '/static/img/combos/classic_burger_combo.jpg'}
         ]

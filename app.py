@@ -63,7 +63,9 @@ from models import db, User, Branch, Category, MenuItem, Table, Order, OrderItem
 
 load_dotenv()
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 secret_key = os.environ.get('SECRET_KEY')
@@ -107,7 +109,7 @@ csrf = CSRFProtect(app)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["5000 per day", "1000 per hour"],
     storage_uri="memory://"
 )
 db.init_app(app)

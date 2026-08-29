@@ -3389,6 +3389,38 @@ def auto_migrate():
                 db.session.add(mi_s)
             db.session.commit()
 
+
+        # Seed Rolls/Wraps
+        rolls_cat = Category.query.filter_by(name='ROLLS/WRAPS').first()
+        if not rolls_cat:
+            rolls_cat = Category(name='ROLLS/WRAPS', sort_order=10)
+            db.session.add(rolls_cat)
+            db.session.commit()
+            
+            rolls_items = [
+                ("Veg Rolls", 69.0, "", False),
+                ("Veg Cheese Rolls", 79.0, "", False),
+                ("Schezwan Cheese Rolls", 89.0, "", False),
+                ("Veg Cocktail Rolls", 89.0, "", False),
+                ("Tandoori Veg Wraps", 99.0, "", False),
+                ("Veg Cocktail Paneer Wrap", 109.0, "", False),
+                ("Veg Paneer Cheese Wrap", 109.0, "", False),
+                ("Double Cheese Paneer Wrap", 129.0, "Spiced paneer double melted cheese blast", True)
+            ]
+            
+            for item_data in rolls_items:
+                name, price, desc, is_fav = item_data
+                mi = MenuItem(
+                    name=name,
+                    price=price,
+                    description=desc,
+                    category_id=rolls_cat.id,
+                    is_favorite=is_fav,
+                    food_type='veg'
+                )
+                db.session.add(mi)
+            db.session.commit()
+
 # Run migration on startup safely
 try:
     auto_migrate()

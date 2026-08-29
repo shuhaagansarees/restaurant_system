@@ -3368,6 +3368,27 @@ def auto_migrate():
         db.session.commit()
 
 
+
+        # Fix Cold Coffee
+        coffee_old = MenuItem.query.filter_by(name='Cold Coffee (Classic)').first()
+        if coffee_old:
+            coffee_old.name = 'Cold Coffee (Classic) (L)'
+            coffee_old.price = 69.0
+            
+            # Check if S exists
+            coffee_s = MenuItem.query.filter_by(name='Cold Coffee (Classic) (S)').first()
+            if not coffee_s:
+                mi_s = MenuItem(
+                    name='Cold Coffee (Classic) (S)',
+                    price=49.0,
+                    description=coffee_old.description,
+                    category_id=coffee_old.category_id,
+                    is_favorite=False,
+                    food_type='veg'
+                )
+                db.session.add(mi_s)
+            db.session.commit()
+
 # Run migration on startup safely
 try:
     auto_migrate()

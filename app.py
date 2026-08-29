@@ -3369,23 +3369,23 @@ def auto_migrate():
 
 
 
-        # Fix Cold Coffee
-        coffee_old = MenuItem.query.filter_by(name='Cold Coffee (Classic)').first()
-        if coffee_old:
-            coffee_old.name = 'Cold Coffee (Classic) (L)'
-            coffee_old.price = 69.0
-            
-            # Check if S exists
+        # Fix Cold Coffee Forcefully
+        cold_bev_cat = Category.query.filter(Category.name.ilike('%Cold Beverages%')).first()
+        if cold_bev_cat:
+            coffee_old = MenuItem.query.filter_by(name='Cold Coffee (Classic)').first()
+            if coffee_old:
+                coffee_old.name = 'Cold Coffee (Classic) (L)'
+                coffee_old.price = 69.0
+                db.session.commit()
+                
+            coffee_l = MenuItem.query.filter_by(name='Cold Coffee (Classic) (L)').first()
+            if not coffee_l:
+                mi_l = MenuItem(name='Cold Coffee (Classic) (L)', price=69.0, category_id=cold_bev_cat.id, food_type='veg')
+                db.session.add(mi_l)
+                
             coffee_s = MenuItem.query.filter_by(name='Cold Coffee (Classic) (S)').first()
             if not coffee_s:
-                mi_s = MenuItem(
-                    name='Cold Coffee (Classic) (S)',
-                    price=49.0,
-                    description=coffee_old.description,
-                    category_id=coffee_old.category_id,
-                    is_favorite=False,
-                    food_type='veg'
-                )
+                mi_s = MenuItem(name='Cold Coffee (Classic) (S)', price=49.0, category_id=cold_bev_cat.id, food_type='veg')
                 db.session.add(mi_s)
             db.session.commit()
 

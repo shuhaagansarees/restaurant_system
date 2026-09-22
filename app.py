@@ -3403,6 +3403,13 @@ def auto_migrate():
                 
         db.session.commit()
 
+
+        # Delete Peri Peri Paneer Pizza
+        bad_pizza = MenuItem.query.filter_by(name='Peri Peri Paneer Pizza').first()
+        if bad_pizza:
+            db.session.delete(bad_pizza)
+            db.session.commit()
+
         # Fix Cold Coffee Forcefully
         cold_bev_cat = Category.query.filter(Category.name.ilike('%Cold Beverages%')).first()
         if cold_bev_cat:
@@ -3636,8 +3643,7 @@ def magic_add_menu():
             ('Farm House Burger', 109, 'Garden-fresh veggies, tomato & cheese', False),
             ('Tandoori Paneer Burger', 139, 'Smoky paneer steak, mint mayo', False),
             ('Original Double Tikki Burger', 149, 'Two crispy patties, melted cheese & sauces', True)],
- 'Pizza': [('Peri Peri Paneer Pizza', 109, 'Spiced peri peri paneer, onions & melted cheese', False),
-           ('Margherita Pizza', 129, 'Tomato sauce, mozzarella & fresh basil', False),
+ 'Pizza': [('Margherita Pizza', 129, 'Tomato sauce, mozzarella & fresh basil', False),
            ('Cheese Corn Pizza', 139, 'Sweet corn, thick layer of cheese', False),
            ('Spicy Tangy Pizza', 169, 'Zesty sauces, fiery jalapenos', False),
            ('Farm House Pizza', 209, 'Onion, capsicum, tomato & mushroom', False),

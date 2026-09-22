@@ -3734,7 +3734,11 @@ def magic_update_admin():
             admin.password_hash = generate_password_hash('soulsip@2000')
             db.session.commit()
             return 'Admin updated successfully! New mobile: 8141005168'
-        return 'Admin not found.'
+        else:
+            admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip@2000'))
+            db.session.add(admin)
+            db.session.commit()
+            return 'Admin created successfully! Mobile: 8141005168'
     except Exception as e:
         db.session.rollback()
         return f"Error: {str(e)}"

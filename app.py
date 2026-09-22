@@ -3353,14 +3353,12 @@ def auto_migrate():
         # Update categories
         cats = Category.query.all()
         for c in cats:
-            if c.name in translations and c.name_hi != translations[c.name]:
-                c.name_hi = translations[c.name]
+            pass  # Disabled to prevent admin overwrite
                 
         # Update menu items
         items = MenuItem.query.all()
         for i in items:
-            if i.name in translations and i.name_hi != translations[i.name]:
-                i.name_hi = translations[i.name]
+            pass  # Disabled to prevent admin overwrite
                 
         db.session.commit()
 
@@ -3385,9 +3383,7 @@ def auto_migrate():
                 )
                 db.session.add(mi)
             else:
-                mi.image_url = cd['img']
-                mi.price = cd['price']
-                mi.description = cd['desc']
+                pass  # Disabled to prevent admin overwrite
         db.session.commit()
 
 
@@ -3407,14 +3403,12 @@ def auto_migrate():
             'Vegetable Cheese Maggi': 129.0
         }
         for item_name, new_price in price_updates.items():
-            mi = MenuItem.query.filter_by(name=item_name).first()
-            if mi and mi.price != new_price:
-                mi.price = new_price
+            pass  # Disabled to prevent admin overwrite
         
         # Rename Fries
         fries_old = MenuItem.query.filter_by(name='Special Loaded Long Fries').first()
-        if fries_old:
-            fries_old.name = 'Loaded Crispy Long-Stick Fries'
+        # if fries_old:
+        #    fries_old.name = 'Loaded Crispy Long-Stick Fries'  Disabled
             
         # Add Black Current Thick Shake
         shake_cat = Category.query.filter_by(name='Thick / Loaded Shakes').first()
@@ -3439,7 +3433,7 @@ def auto_migrate():
             coffee_old = MenuItem.query.filter_by(name='Cold Coffee (Classic)').first()
             if coffee_old:
                 coffee_old.name = 'Cold Coffee (Classic) (L)'
-                coffee_old.price = 69.0
+                # coffee_old.price = 69.0  Disabled to prevent admin overwrite
                 db.session.commit()
                 
             coffee_l = MenuItem.query.filter_by(name='Cold Coffee (Classic) (L)').first()

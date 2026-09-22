@@ -3222,6 +3222,14 @@ from sqlalchemy import text
 
 def auto_migrate():
     with app.app_context():
+
+        # Ensure Admin User exists
+        if User.query.count() == 0:
+            from werkzeug.security import generate_password_hash
+            admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip@2000'))
+            db.session.add(admin)
+            db.session.commit()
+
         # Ensure new tables are created robustly
         try:
             db.create_all()

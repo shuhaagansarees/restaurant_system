@@ -103,6 +103,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['WTF_CSRF_SSL_STRICT'] = False
+
 
 # Initialize extensions
 csrf = CSRFProtect(app)
@@ -1094,8 +1096,8 @@ def admin_login():
         return redirect(url_for('admin_dashboard'))
         
     if request.method == 'POST':
-        mobile = request.form.get('mobile')
-        password = request.form.get('password')
+        mobile = request.form.get('mobile', '').strip()
+        password = request.form.get('password', '').strip()
         remember = True if request.form.get('remember') else False
         
         user = User.query.filter_by(mobile=mobile).first()

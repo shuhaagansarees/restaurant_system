@@ -1090,6 +1090,7 @@ def admin_index():
     return redirect(url_for('admin_login'))
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@csrf.exempt
 @limiter.limit("5 per minute", methods=["POST"])
 def admin_login():
     if current_user.is_authenticated:
@@ -3232,10 +3233,16 @@ def auto_migrate():
     with app.app_context():
 
         # Ensure Admin User exists
-        if User.query.count() == 0:
+        admin = User.query.filter_by(mobile='8141005168').first()
+        if not admin:
             from werkzeug.security import generate_password_hash
             admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip@2000'))
             db.session.add(admin)
+            db.session.commit()
+        else:
+            # Force update the password just in case they are locked out
+            from werkzeug.security import generate_password_hash
+            admin.password_hash = generate_password_hash('soulsip@2000')
             db.session.commit()
 
         # Ensure new tables are created robustly

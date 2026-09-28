@@ -3232,6 +3232,14 @@ from sqlalchemy import text
 def auto_migrate():
     with app.app_context():
 
+        # One-time price update for Sandwich Snack Combo
+        combo = MenuItem.query.filter_by(name='Sandwich Snack Combo').first()
+        if combo and getattr(app, '_combo_99_updated', False) == False:
+            combo.price = 99.0
+            db.session.commit()
+            app._combo_99_updated = True
+
+
         # Ensure Admin User exists
         admin = User.query.filter_by(mobile='8141005168').first()
         if not admin:

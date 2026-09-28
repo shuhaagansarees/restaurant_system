@@ -392,10 +392,7 @@ from flask import g
 from flask import abort
 
 
-from flask import abort
-@app.before_request
-def block_all_requests():
-    abort(400)
+
 
 @app.before_request
 def start_timer():

@@ -1105,8 +1105,11 @@ def admin_login():
         
         user = User.query.filter_by(mobile=mobile).first()
         
-        if not user or not user.check_password(password):
-            flash('Invalid mobile number or password')
+        if not user:
+            flash('Error: This mobile number is not registered in the system.')
+            return redirect(url_for('admin_login'))
+        if not user.check_password(password):
+            flash('Error: Incorrect password. Please try again.')
             return redirect(url_for('admin_login'))
             
         session.permanent = True
@@ -3246,13 +3249,13 @@ def auto_migrate():
         admin = User.query.filter_by(mobile='8141005168').first()
         if not admin:
             from werkzeug.security import generate_password_hash
-            admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip@2000'))
+            admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip123'))
             db.session.add(admin)
             db.session.commit()
         else:
             # Force update the password just in case they are locked out
             from werkzeug.security import generate_password_hash
-            admin.password_hash = generate_password_hash('soulsip@2000')
+            admin.password_hash = generate_password_hash('soulsip123')
             db.session.commit()
 
         # Ensure new tables are created robustly
@@ -3764,11 +3767,11 @@ def magic_update_admin():
                 db.session.delete(existing)
                 db.session.flush()
             admin.mobile = '8141005168'
-            admin.password_hash = generate_password_hash('soulsip@2000')
+            admin.password_hash = generate_password_hash('soulsip123')
             db.session.commit()
             return 'Admin updated successfully! New mobile: 8141005168'
         else:
-            admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip@2000'))
+            admin = User(name='Admin', mobile='8141005168', role='admin', password_hash=generate_password_hash('soulsip123'))
             db.session.add(admin)
             db.session.commit()
             return 'Admin created successfully! Mobile: 8141005168'

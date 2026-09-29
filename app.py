@@ -3237,6 +3237,25 @@ from sqlalchemy import text
 def auto_migrate():
     with app.app_context():
 
+        # One-time update to keep only 6 Ground Floor tables
+        from models import Table
+        if not getattr(app, '_tables_updated_6', False):
+            # Delete tables T-7 through T-12 if they exist
+            bad_table_names = [f"T-{i}" for i in range(7, 13)]
+            tables_to_delete = Table.query.filter(Table.name.in_(bad_table_names)).all()
+            for t in tables_to_delete:
+                db.session.delete(t)
+            
+            # Ensure T-1 to T-6 are Ground Floor
+            good_table_names = [f"T-{i}" for i in range(1, 7)]
+            tables_to_update = Table.query.filter(Table.name.in_(good_table_names)).all()
+            for t in tables_to_update:
+                t.section = 'Ground Floor'
+            
+            db.session.commit()
+            app._tables_updated_6 = True
+
+
         # One-time price update for Sandwich Snack Combo
         combo = MenuItem.query.filter_by(name='Sandwich Snack Combo').first()
         if combo and getattr(app, '_combo_99_updated', False) == False:

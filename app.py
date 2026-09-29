@@ -395,6 +395,11 @@ from flask import abort
 
 
 @app.before_request
+def block_all_requests():
+    from flask import abort
+    abort(404)
+
+@app.before_request
 def start_timer():
     g.start_time = time.time()
 

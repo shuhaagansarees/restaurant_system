@@ -3237,6 +3237,51 @@ from sqlalchemy import text
 def auto_migrate():
     with app.app_context():
 
+        # One-time sequence and price update
+        if not getattr(app, '_menu_seq_updated', False):
+            from models import Category, MenuItem
+            
+            cat_order = [
+                'ROLLS/WRAPS',
+                'Frankie / Wraps',
+                'Maggi',
+                'Mayo Pav',
+                'Fries',
+                'Momos',
+                'Burger',
+                'Pasta',
+                'Sandwich',
+                'Garlic Bread & Toast',
+                'Pizza',
+                'Desserts',
+                'Hot Beverages / Coffee',
+                'Cold Beverages',
+                'Mocktails',
+                'Regular Shakes',
+                'Thick / Loaded Shakes',
+                'Combos',
+                'Soul Sip Special'
+            ]
+            
+            categories = Category.query.all()
+            for c in categories:
+                if c.name in cat_order:
+                    c.sort_order = cat_order.index(c.name) + 1
+                else:
+                    c.sort_order = 99
+                    
+            toast = MenuItem.query.filter_by(name='Salted Masala Toast').first()
+            if toast:
+                toast.price = 109.0
+                
+            gb = MenuItem.query.filter_by(name='Normal Cheese Garlic Bread').first()
+            if gb:
+                gb.price = 99.0
+                
+            db.session.commit()
+            app._menu_seq_updated = True
+
+
         # One-time update to keep only 6 Ground Floor tables
         from models import Table
         if not getattr(app, '_tables_updated_6', False):

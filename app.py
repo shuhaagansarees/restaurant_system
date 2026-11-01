@@ -3246,22 +3246,28 @@ def auto_migrate():
             (Category.name == 'ROLLS/WRAPS') | (Category.name == 'Rolls/Wraps') | Category.name.ilike('%rolls/wraps%')
         ).first()
 
-        if frankie_cat:
-            frankie_cat.name = 'Frankie/Wraps'
-            frankie_cat.name_hi = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940 / \u0930\u0948\u092a\u094d\u0938'.encode().decode('unicode-escape')
-            frankie_cat.name_gu = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0 / \u0ab0\u0ac7\u0aaa\u0acd\u0ab8'.encode().decode('unicode-escape')
-            frankie_cat.sort_order = 1
-            if rolls_cat and rolls_cat.id != frankie_cat.id:
-                for item in MenuItem.query.filter_by(category_id=rolls_cat.id).all():
-                    item.category_id = frankie_cat.id
-                db.session.delete(rolls_cat)
-            db.session.commit()
-        elif rolls_cat:
-            rolls_cat.name = 'Frankie/Wraps'
-            rolls_cat.name_hi = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940 / \u0930\u0948\u092a\u094d\u0938'.encode().decode('unicode-escape')
-            rolls_cat.name_gu = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0 / \u0ab0\u0ac7\u0aaa\u0acd\u0ab8'.encode().decode('unicode-escape')
-            rolls_cat.sort_order = 1
-            db.session.commit()
+        try:
+            if frankie_cat:
+                frankie_cat.name = 'Frankie/Wraps'
+                frankie_cat.name_hi = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940 / \u0930\u0948\u092a\u094d\u0938'.encode().decode('unicode-escape')
+                frankie_cat.name_gu = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0 / \u0ab0\u0ac7\u0aaa\u0acd\u0ab8'.encode().decode('unicode-escape')
+                frankie_cat.sort_order = 1
+                db.session.commit()
+                if rolls_cat and rolls_cat.id != frankie_cat.id:
+                    # Direct SQL update to prevent SQLAlchemy from nullifying category_id
+                    db.session.execute(text("UPDATE menu_items SET category_id = :fid WHERE category_id = :rid"), {"fid": frankie_cat.id, "rid": rolls_cat.id})
+                    db.session.execute(text("DELETE FROM categories WHERE id = :rid"), {"rid": rolls_cat.id})
+                    db.session.commit()
+                    db.session.expire_all()
+            elif rolls_cat:
+                rolls_cat.name = 'Frankie/Wraps'
+                rolls_cat.name_hi = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940 / \u0930\u0948\u092a\u094d\u0938'.encode().decode('unicode-escape')
+                rolls_cat.name_gu = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0 / \u0ab0\u0ac7\u0aaa\u0acd\u0ab8'.encode().decode('unicode-escape')
+                rolls_cat.sort_order = 1
+                db.session.commit()
+        except Exception as ex:
+            db.session.rollback()
+            print(f"Merge error handled: {ex}")
 
         # One-time sequence and price update
         cat_order = [

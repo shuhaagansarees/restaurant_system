@@ -3269,6 +3269,37 @@ def auto_migrate():
             db.session.rollback()
             print(f"Merge error handled: {ex}")
 
+        # Replace 'Rolls' with 'Frankie' in menu items
+        try:
+            hi_rolls = '\u0930\u094b\u0932\u094d\u0938'.encode().decode('unicode-escape')
+            hi_frankie = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940'.encode().decode('unicode-escape')
+            gu_rolls = '\u0ab0\u0acb\u0ab2\u0acd\u0ab8'.encode().decode('unicode-escape')
+            gu_frankie = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0'.encode().decode('unicode-escape')
+
+            items_with_rolls = MenuItem.query.filter(MenuItem.name.ilike('%rolls%')).all()
+            for it in items_with_rolls:
+                if 'Rolls' in it.name:
+                    it.name = it.name.replace('Rolls', 'Frankie')
+                elif 'rolls' in it.name:
+                    it.name = it.name.replace('rolls', 'frankie')
+                elif 'ROLLS' in it.name:
+                    it.name = it.name.replace('ROLLS', 'FRANKIE')
+                if it.name_hi and hi_rolls in it.name_hi:
+                    it.name_hi = it.name_hi.replace(hi_rolls, hi_frankie)
+                if it.name_gu and gu_rolls in it.name_gu:
+                    it.name_gu = it.name_gu.replace(gu_rolls, gu_frankie)
+            db.session.commit()
+            
+            db.session.execute(text("UPDATE menu_items SET name = REPLACE(name, 'Rolls', 'Frankie') WHERE name LIKE '%Rolls%';"))
+            db.session.execute(text("UPDATE menu_items SET name = REPLACE(name, 'rolls', 'frankie') WHERE name LIKE '%rolls%';"))
+            db.session.execute(text("UPDATE menu_items SET name = REPLACE(name, 'ROLLS', 'FRANKIE') WHERE name LIKE '%ROLLS%';"))
+            db.session.execute(text("UPDATE menu_items SET name_hi = REPLACE(name_hi, :h_rolls, :h_frankie) WHERE name_hi LIKE :h_like;"), {"h_rolls": hi_rolls, "h_frankie": hi_frankie, "h_like": f"%{hi_rolls}%"})
+            db.session.execute(text("UPDATE menu_items SET name_gu = REPLACE(name_gu, :g_rolls, :g_frankie) WHERE name_gu LIKE :g_like;"), {"g_rolls": gu_rolls, "g_frankie": gu_frankie, "g_like": f"%{gu_rolls}%"})
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error renaming rolls to frankie: {e}")
+
         # One-time sequence and price update
         cat_order = [
             'Frankie/Wraps',

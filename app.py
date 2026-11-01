@@ -3237,49 +3237,71 @@ from sqlalchemy import text
 def auto_migrate():
     with app.app_context():
 
-        # One-time sequence and price update
-        if not getattr(app, '_menu_seq_updated', False):
-            from models import Category, MenuItem
-            
-            cat_order = [
-                'ROLLS/WRAPS',
-                'Frankie / Wraps',
-                'Maggi',
-                'Mayo Pav',
-                'Fries',
-                'Momos',
-                'Burger',
-                'Pasta',
-                'Sandwich',
-                'Garlic Bread & Toast',
-                'Pizza',
-                'Desserts',
-                'Hot Beverages / Coffee',
-                'Cold Beverages',
-                'Mocktails',
-                'Regular Shakes',
-                'Thick / Loaded Shakes',
-                'Combos',
-                'Soul Sip Special'
-            ]
-            
-            categories = Category.query.all()
-            for c in categories:
-                if c.name in cat_order:
-                    c.sort_order = cat_order.index(c.name) + 1
-                else:
-                    c.sort_order = 99
-                    
-            toast = MenuItem.query.filter_by(name='Salted Masala Toast').first()
-            if toast:
-                toast.price = 109.0
-                
-            gb = MenuItem.query.filter_by(name='Normal Cheese Garlic Bread').first()
-            if gb:
-                gb.price = 99.0
-                
+        # Merge ROLLS/WRAPS into Frankie/Wraps and reorder sequence
+        from models import Category, MenuItem
+        frankie_cat = Category.query.filter(
+            (Category.name == 'Frankie / Wraps') | (Category.name == 'Frankie/Wraps') | Category.name.ilike('%frankie%')
+        ).first()
+        rolls_cat = Category.query.filter(
+            (Category.name == 'ROLLS/WRAPS') | (Category.name == 'Rolls/Wraps') | Category.name.ilike('%rolls/wraps%')
+        ).first()
+
+        if frankie_cat:
+            frankie_cat.name = 'Frankie/Wraps'
+            frankie_cat.name_hi = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940 / \u0930\u0948\u092a\u094d\u0938'.encode().decode('unicode-escape')
+            frankie_cat.name_gu = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0 / \u0ab0\u0ac7\u0aaa\u0acd\u0ab8'.encode().decode('unicode-escape')
+            frankie_cat.sort_order = 1
+            if rolls_cat and rolls_cat.id != frankie_cat.id:
+                for item in MenuItem.query.filter_by(category_id=rolls_cat.id).all():
+                    item.category_id = frankie_cat.id
+                db.session.delete(rolls_cat)
             db.session.commit()
-            app._menu_seq_updated = True
+        elif rolls_cat:
+            rolls_cat.name = 'Frankie/Wraps'
+            rolls_cat.name_hi = '\u092b\u093c\u094d\u0930\u0948\u0902\u0915\u0940 / \u0930\u0948\u092a\u094d\u0938'.encode().decode('unicode-escape')
+            rolls_cat.name_gu = '\u0aab\u0acd\u0ab0\u0ac7\u0aa8\u0acd\u0a95\u0ac0 / \u0ab0\u0ac7\u0aaa\u0acd\u0ab8'.encode().decode('unicode-escape')
+            rolls_cat.sort_order = 1
+            db.session.commit()
+
+        # One-time sequence and price update
+        cat_order = [
+            'Frankie/Wraps',
+            'Frankie / Wraps',
+            'Maggi',
+            'Mayo Pav',
+            'Fries',
+            'Momos',
+            'Burger',
+            'Pasta',
+            'Sandwich',
+            'Garlic Bread & Toast',
+            'Pizza',
+            'Desserts',
+            'Hot Beverages / Coffee',
+            'Cold Beverages',
+            'Mocktails',
+            'Regular Shakes',
+            'Thick / Loaded Shakes',
+            'Combos',
+            'Soul Sip Special'
+        ]
+        
+        categories = Category.query.all()
+        for c in categories:
+            if c.name in cat_order:
+                c.sort_order = cat_order.index(c.name) + 1
+            else:
+                c.sort_order = 99
+                
+        toast = MenuItem.query.filter_by(name='Salted Masala Toast').first()
+        if toast:
+            toast.price = 109.0
+            
+        gb = MenuItem.query.filter_by(name='Normal Cheese Garlic Bread').first()
+        if gb:
+            gb.price = 99.0
+            
+        db.session.commit()
 
 
         # One-time update to keep only 6 Ground Floor tables
@@ -3564,36 +3586,8 @@ def auto_migrate():
             db.session.commit()
 
 
-        # Seed Rolls/Wraps
-        rolls_cat = Category.query.filter_by(name='ROLLS/WRAPS').first()
-        if not rolls_cat:
-            rolls_cat = Category(name='ROLLS/WRAPS', sort_order=10)
-            db.session.add(rolls_cat)
-            db.session.commit()
-            
-            rolls_items = [
-                ("Veg Rolls", 69.0, "", False),
-                ("Veg Cheese Rolls", 79.0, "", False),
-                ("Schezwan Cheese Rolls", 89.0, "", False),
-                ("Veg Cocktail Rolls", 89.0, "", False),
-                ("Tandoori Veg Wraps", 99.0, "", False),
-                ("Veg Cocktail Paneer Wrap", 109.0, "", False),
-                ("Veg Paneer Cheese Wrap", 109.0, "", False),
-                ("Double Cheese Paneer Wrap", 129.0, "Spiced paneer double melted cheese blast", True)
-            ]
-            
-            for item_data in rolls_items:
-                name, price, desc, is_fav = item_data
-                mi = MenuItem(
-                    name=name,
-                    price=price,
-                    description=desc,
-                    category_id=rolls_cat.id,
-                    is_favorite=is_fav,
-                    food_type='veg'
-                )
-                db.session.add(mi)
-            db.session.commit()
+        # Seed Rolls/Wraps disabled - merged into Frankie/Wraps
+        pass
 
 # Run migration on startup safely
 try:

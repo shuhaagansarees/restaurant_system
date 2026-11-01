@@ -3304,6 +3304,42 @@ def auto_migrate():
         db.session.commit()
 
 
+        # Reset all orders and transactions to 0
+        if not getattr(app, '_orders_reset_to_zero_done', False):
+            try:
+                from models import CreditLedger, Refund, Invoice, OrderItem, WaiterCall, Feedback, Order, DayEndRecord, Table
+                CreditLedger.query.delete()
+                Refund.query.delete()
+                Invoice.query.delete()
+                OrderItem.query.delete()
+                WaiterCall.query.delete()
+                Feedback.query.delete()
+                Order.query.delete()
+                DayEndRecord.query.delete()
+                
+                for t in Table.query.all():
+                    t.status = 'vacant'
+                    t.session_start_time = None
+                    
+                db.session.commit()
+
+                seq_queries = [
+                    "ALTER SEQUENCE IF EXISTS orders_id_seq RESTART WITH 1;",
+                    "ALTER SEQUENCE IF EXISTS invoices_id_seq RESTART WITH 1;",
+                    "ALTER SEQUENCE IF EXISTS order_items_id_seq RESTART WITH 1;"
+                ]
+                for q in seq_queries:
+                    try:
+                        db.session.execute(text(q))
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                app._orders_reset_to_zero_done = True
+                print("Successfully cleared all orders and reset to 0.")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error resetting orders: {e}")
+
         # One-time update to keep only 6 Ground Floor tables
         from models import Table
         if not getattr(app, '_tables_updated_6', False):
